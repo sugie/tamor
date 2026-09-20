@@ -1,0 +1,695 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		07650F2A96421AE5EFEE6190 /* JewelGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF5445E524BCF5CA54248A47 /* JewelGeometry.swift */; };
+		0833A73E57DB2CACB0E78C37 /* JewelRingApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9E994EE08AA4E42E0CBDBDD /* JewelRingApp.swift */; };
+		0891F67D2988E45B04776677 /* JewelRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC17E9375EB8358CE0525C0E /* JewelRenderer.swift */; };
+		0B47C72AF7D262F598F7862D /* GlassFragmentShaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 54775F15793955AE0FB1449F /* GlassFragmentShaders.metal */; };
+		0BF9D2A4B96A196D855C956C /* GlassStudyRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87D91A2AFE2CF293C8CAE84E /* GlassStudyRenderer.swift */; };
+		13193493727544CF57237D06 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 02DF080478E07AF2B38F0A4A /* Assets.xcassets */; };
+		1AB87E1D5F6A2AF2354418A4 /* GlassRayEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCDD2C8AE9899995FF25E5F /* GlassRayEngine.swift */; };
+		1DB01B2AD10C34B8FA70AFDF /* MiniGameScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC63F1437B33E8C478F3F61 /* MiniGameScreen.swift */; };
+		211D1D4C9BF904076A188B6C /* JewelSceneState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CE6511EF64C8ECA90F169D8 /* JewelSceneState.swift */; };
+		266AA44D3FE3EC17FC56224E /* CrackMaterial.metal in Sources */ = {isa = PBXBuildFile; fileRef = F645595A81EF91E8D98B113D /* CrackMaterial.metal */; };
+		2A85C0300623CAA31149700A /* CrackNetwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65D6EBC1F8CF253C150FB79D /* CrackNetwork.swift */; };
+		494C0355C4182649AC508658 /* MiniGameMetalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF2F707D92A4AF385218B617 /* MiniGameMetalView.swift */; };
+		54D40BCEBF1F543FB18CE8C6 /* GameRules.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CE3C7EA747B88F3CDB14406 /* GameRules.swift */; };
+		6DCC61BABC52E760DBC47CEF /* GlassFragmentEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1EA09E335AD7C14A39CB40F /* GlassFragmentEngine.swift */; };
+		6FA93279374CAC1475D0BC66 /* GlassBreakState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 909779C03FF0564969CD6C0D /* GlassBreakState.swift */; };
+		7113820542569092D2508EA6 /* JewelMiniSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBBBAE6927CB41E13A55D1B5 /* JewelMiniSession.swift */; };
+		78B5AF4FFDB07E5E7F324FED /* CrackMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C403F85B5A151D44F2A4A2C /* CrackMetrics.swift */; };
+		78F06B3697B9A95C44379C14 /* CrackMaterialRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07FAE29739A48799B2BD6D8F /* CrackMaterialRenderer.swift */; };
+		7DA0553284241384729DF3EE /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = C6FA09C4A857BADF5BF684F0 /* PrivacyInfo.xcprivacy */; };
+		809C1CD99E47B777CE3FEE24 /* JewelRingUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 747F88C6093CFAFEE7A812B6 /* JewelRingUITests.swift */; };
+		9DDE72778AC346C0A4E9AAFF /* PlayerProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AFD420F6AB7880F1848273C /* PlayerProgress.swift */; };
+		B259B62D18E331A2CF7C4EE2 /* GlassRayScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BED6613EEBAE841D88CB9EB /* GlassRayScene.swift */; };
+		B5CCAED58AF37A57B3C51517 /* TamorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D40641F59147995FEF16343 /* TamorTests.swift */; };
+		B7AB7CFCB3696F04F552A412 /* MiniGameEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D6F989501CCA86702EADEE7 /* MiniGameEngine.swift */; };
+		BB17D7D343DE42C36A24B9A7 /* GlassBreakGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = E54A94FE3F31D91E9648550A /* GlassBreakGeometry.swift */; };
+		BDCC36971085D746069ACF81 /* RenderQuality.swift in Sources */ = {isa = PBXBuildFile; fileRef = F03B889F160EB8246D8840C4 /* RenderQuality.swift */; };
+		C011DEF73456FC56A656265A /* JewelMetalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F6137DD258DC12395116DAD /* JewelMetalView.swift */; };
+		CAFD468FC3AB6D46B00591C2 /* JewelSceneTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0F67C170EFCF90512E9C45F /* JewelSceneTests.swift */; };
+		D0F3870BFF9D4754AA4B5DDC /* GemRayResources.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A8E9F3572DF4626338822D1 /* GemRayResources.swift */; };
+		D2EF3389086BF9F635E24166 /* JewelCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C7E97D8807EE7E26461B310 /* JewelCatalog.swift */; };
+		D734E7D81F316C99E3177CBD /* GlassRayTracing.metal in Sources */ = {isa = PBXBuildFile; fileRef = 174AE32B0C6B14C5ADA5AD71 /* GlassRayTracing.metal */; };
+		DE55C356DDF8C4544D032C49 /* GlassObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 012331A1B5A1C6D49178DFCA /* GlassObject.swift */; };
+		E1178F9483BE7366F342E067 /* JewelShaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 33B3F411316CF64BAA591E61 /* JewelShaders.metal */; };
+		E1F10D0D79B4A631087363D9 /* GlassStudyShaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 0164C03D897463464D7A8EA3 /* GlassStudyShaders.metal */; };
+		E8478719C036D8312849967F /* JewelSave.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8056086E94B0A799C0991712 /* JewelSave.swift */; };
+		F9AFF605BB83BA245BADC200 /* GlassCrack.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DBE4AC032DC647F0E42BF13 /* GlassCrack.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		388D158A009FB79E15C38EDC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BDE18F6B2070156147D00042 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 038A7940CDA2C140386A2C07;
+			remoteInfo = Tamor;
+		};
+		DFAA76C0A8957335BDC0BC51 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BDE18F6B2070156147D00042 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 038A7940CDA2C140386A2C07;
+			remoteInfo = Tamor;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		012331A1B5A1C6D49178DFCA /* GlassObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassObject.swift; sourceTree = "<group>"; };
+		0164C03D897463464D7A8EA3 /* GlassStudyShaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = GlassStudyShaders.metal; sourceTree = "<group>"; };
+		02DF080478E07AF2B38F0A4A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		07FAE29739A48799B2BD6D8F /* CrackMaterialRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrackMaterialRenderer.swift; sourceTree = "<group>"; };
+		0DBE4AC032DC647F0E42BF13 /* GlassCrack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassCrack.swift; sourceTree = "<group>"; };
+		174AE32B0C6B14C5ADA5AD71 /* GlassRayTracing.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = GlassRayTracing.metal; sourceTree = "<group>"; };
+		1BED6613EEBAE841D88CB9EB /* GlassRayScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassRayScene.swift; sourceTree = "<group>"; };
+		1C1B4CB32672DA13450DC62E /* TamorUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = TamorUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		1C403F85B5A151D44F2A4A2C /* CrackMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrackMetrics.swift; sourceTree = "<group>"; };
+		22D7404A020C6B78B69050F5 /* Tamor.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Tamor.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		2CE3C7EA747B88F3CDB14406 /* GameRules.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameRules.swift; sourceTree = "<group>"; };
+		2F6137DD258DC12395116DAD /* JewelMetalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JewelMetalView.swift; sourceTree = "<group>"; };
+		33B3F411316CF64BAA591E61 /* JewelShaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = JewelShaders.metal; sourceTree = "<group>"; };
+		3A8E9F3572DF4626338822D1 /* GemRayResources.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GemRayResources.swift; sourceTree = "<group>"; };
+		4D6F989501CCA86702EADEE7 /* MiniGameEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiniGameEngine.swift; sourceTree = "<group>"; };
+		54775F15793955AE0FB1449F /* GlassFragmentShaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = GlassFragmentShaders.metal; sourceTree = "<group>"; };
+		5C7E97D8807EE7E26461B310 /* JewelCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JewelCatalog.swift; sourceTree = "<group>"; };
+		5D40641F59147995FEF16343 /* TamorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TamorTests.swift; sourceTree = "<group>"; };
+		65D6EBC1F8CF253C150FB79D /* CrackNetwork.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrackNetwork.swift; sourceTree = "<group>"; };
+		6FCDD2C8AE9899995FF25E5F /* GlassRayEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassRayEngine.swift; sourceTree = "<group>"; };
+		747F88C6093CFAFEE7A812B6 /* JewelRingUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JewelRingUITests.swift; sourceTree = "<group>"; };
+		8056086E94B0A799C0991712 /* JewelSave.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JewelSave.swift; sourceTree = "<group>"; };
+		87D91A2AFE2CF293C8CAE84E /* GlassStudyRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassStudyRenderer.swift; sourceTree = "<group>"; };
+		889FB07DB768A5867E3E93BB /* GlassCrackShading.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GlassCrackShading.h; sourceTree = "<group>"; };
+		8AFD420F6AB7880F1848273C /* PlayerProgress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerProgress.swift; sourceTree = "<group>"; };
+		8CE6511EF64C8ECA90F169D8 /* JewelSceneState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JewelSceneState.swift; sourceTree = "<group>"; };
+		909779C03FF0564969CD6C0D /* GlassBreakState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassBreakState.swift; sourceTree = "<group>"; };
+		B9E994EE08AA4E42E0CBDBDD /* JewelRingApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JewelRingApp.swift; sourceTree = "<group>"; };
+		BC17E9375EB8358CE0525C0E /* JewelRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JewelRenderer.swift; sourceTree = "<group>"; };
+		BF5445E524BCF5CA54248A47 /* JewelGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JewelGeometry.swift; sourceTree = "<group>"; };
+		C1EA09E335AD7C14A39CB40F /* GlassFragmentEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassFragmentEngine.swift; sourceTree = "<group>"; };
+		C6FA09C4A857BADF5BF684F0 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		CBC63F1437B33E8C478F3F61 /* MiniGameScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiniGameScreen.swift; sourceTree = "<group>"; };
+		E0F67C170EFCF90512E9C45F /* JewelSceneTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JewelSceneTests.swift; sourceTree = "<group>"; };
+		E54A94FE3F31D91E9648550A /* GlassBreakGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassBreakGeometry.swift; sourceTree = "<group>"; };
+		EF2F707D92A4AF385218B617 /* MiniGameMetalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiniGameMetalView.swift; sourceTree = "<group>"; };
+		F03B889F160EB8246D8840C4 /* RenderQuality.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenderQuality.swift; sourceTree = "<group>"; };
+		F645595A81EF91E8D98B113D /* CrackMaterial.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = CrackMaterial.metal; sourceTree = "<group>"; };
+		FBBBAE6927CB41E13A55D1B5 /* JewelMiniSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JewelMiniSession.swift; sourceTree = "<group>"; };
+		FE4CA0C81BF13FD483BE927A /* TamorTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = TamorTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		387CC0B0A29FA93CD0DBE516 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				22D7404A020C6B78B69050F5 /* Tamor.app */,
+				FE4CA0C81BF13FD483BE927A /* TamorTests.xctest */,
+				1C1B4CB32672DA13450DC62E /* TamorUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		3C2E06563B1F231695565596 /* Session */ = {
+			isa = PBXGroup;
+			children = (
+				E0F67C170EFCF90512E9C45F /* JewelSceneTests.swift */,
+				5D40641F59147995FEF16343 /* TamorTests.swift */,
+			);
+			name = Session;
+			path = Tests/Session;
+			sourceTree = "<group>";
+		};
+		7280227794580EFA82BD73B0 /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				747F88C6093CFAFEE7A812B6 /* JewelRingUITests.swift */,
+			);
+			name = UI;
+			path = Tests/UI;
+			sourceTree = "<group>";
+		};
+		820339FF6843CBE41F936A4B /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				2CE3C7EA747B88F3CDB14406 /* GameRules.swift */,
+				5C7E97D8807EE7E26461B310 /* JewelCatalog.swift */,
+				8056086E94B0A799C0991712 /* JewelSave.swift */,
+				4D6F989501CCA86702EADEE7 /* MiniGameEngine.swift */,
+				8AFD420F6AB7880F1848273C /* PlayerProgress.swift */,
+				F03B889F160EB8246D8840C4 /* RenderQuality.swift */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		A2D30300AC50B598D9EA06CE /* Rendering */ = {
+			isa = PBXGroup;
+			children = (
+				3A8E9F3572DF4626338822D1 /* GemRayResources.swift */,
+				BF5445E524BCF5CA54248A47 /* JewelGeometry.swift */,
+				2F6137DD258DC12395116DAD /* JewelMetalView.swift */,
+				BC17E9375EB8358CE0525C0E /* JewelRenderer.swift */,
+				33B3F411316CF64BAA591E61 /* JewelShaders.metal */,
+				EF2F707D92A4AF385218B617 /* MiniGameMetalView.swift */,
+			);
+			path = Rendering;
+			sourceTree = "<group>";
+		};
+		B81DA6249199F91A859F66D6 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				FBBBAE6927CB41E13A55D1B5 /* JewelMiniSession.swift */,
+				B9E994EE08AA4E42E0CBDBDD /* JewelRingApp.swift */,
+				8CE6511EF64C8ECA90F169D8 /* JewelSceneState.swift */,
+				CBC63F1437B33E8C478F3F61 /* MiniGameScreen.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		BFF035797F8EF8E86889DE21 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				CBCFADB773B409D202709583 /* Glass */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		CBCCDC1D36FFD11DDFA470CD /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				C6FA09C4A857BADF5BF684F0 /* PrivacyInfo.xcprivacy */,
+				B81DA6249199F91A859F66D6 /* App */,
+				820339FF6843CBE41F936A4B /* Core */,
+				BFF035797F8EF8E86889DE21 /* Features */,
+				A2D30300AC50B598D9EA06CE /* Rendering */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		CBCFADB773B409D202709583 /* Glass */ = {
+			isa = PBXGroup;
+			children = (
+				F645595A81EF91E8D98B113D /* CrackMaterial.metal */,
+				07FAE29739A48799B2BD6D8F /* CrackMaterialRenderer.swift */,
+				1C403F85B5A151D44F2A4A2C /* CrackMetrics.swift */,
+				65D6EBC1F8CF253C150FB79D /* CrackNetwork.swift */,
+				E54A94FE3F31D91E9648550A /* GlassBreakGeometry.swift */,
+				909779C03FF0564969CD6C0D /* GlassBreakState.swift */,
+				0DBE4AC032DC647F0E42BF13 /* GlassCrack.swift */,
+				889FB07DB768A5867E3E93BB /* GlassCrackShading.h */,
+				C1EA09E335AD7C14A39CB40F /* GlassFragmentEngine.swift */,
+				54775F15793955AE0FB1449F /* GlassFragmentShaders.metal */,
+				012331A1B5A1C6D49178DFCA /* GlassObject.swift */,
+				6FCDD2C8AE9899995FF25E5F /* GlassRayEngine.swift */,
+				1BED6613EEBAE841D88CB9EB /* GlassRayScene.swift */,
+				174AE32B0C6B14C5ADA5AD71 /* GlassRayTracing.metal */,
+				87D91A2AFE2CF293C8CAE84E /* GlassStudyRenderer.swift */,
+				0164C03D897463464D7A8EA3 /* GlassStudyShaders.metal */,
+			);
+			path = Glass;
+			sourceTree = "<group>";
+		};
+		D7FDC455EA2BEE7B502F57FE = {
+			isa = PBXGroup;
+			children = (
+				02DF080478E07AF2B38F0A4A /* Assets.xcassets */,
+				3C2E06563B1F231695565596 /* Session */,
+				CBCCDC1D36FFD11DDFA470CD /* Sources */,
+				7280227794580EFA82BD73B0 /* UI */,
+				387CC0B0A29FA93CD0DBE516 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		038A7940CDA2C140386A2C07 /* Tamor */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 97CD3110B3ED5FFACAD2E15D /* Build configuration list for PBXNativeTarget "Tamor" */;
+			buildPhases = (
+				61A04BA445E2A5E24139CC42 /* Sources */,
+				1F0CC5C2D02304354FEAEF59 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Tamor;
+			packageProductDependencies = (
+			);
+			productName = Tamor;
+			productReference = 22D7404A020C6B78B69050F5 /* Tamor.app */;
+			productType = "com.apple.product-type.application";
+		};
+		64C861822FAC799163CBD643 /* TamorTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A79B9F97654B7A907FBB28C6 /* Build configuration list for PBXNativeTarget "TamorTests" */;
+			buildPhases = (
+				2BD66AAB762C44E7054B3925 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				BBFA96F4E89795DE20D3411D /* PBXTargetDependency */,
+			);
+			name = TamorTests;
+			packageProductDependencies = (
+			);
+			productName = TamorTests;
+			productReference = FE4CA0C81BF13FD483BE927A /* TamorTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		9E8B5C4C70C320768BDD02DC /* TamorUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AB26C93B699806200E7B51FA /* Build configuration list for PBXNativeTarget "TamorUITests" */;
+			buildPhases = (
+				F5B6A4A4DBF7231F158F9FBC /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				7E2D614D9E48769B92BFC82B /* PBXTargetDependency */,
+			);
+			name = TamorUITests;
+			packageProductDependencies = (
+			);
+			productName = TamorUITests;
+			productReference = 1C1B4CB32672DA13450DC62E /* TamorUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		BDE18F6B2070156147D00042 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					038A7940CDA2C140386A2C07 = {
+						ProvisioningStyle = Automatic;
+					};
+					64C861822FAC799163CBD643 = {
+						ProvisioningStyle = Automatic;
+					};
+					9E8B5C4C70C320768BDD02DC = {
+						ProvisioningStyle = Automatic;
+						TestTargetID = 038A7940CDA2C140386A2C07;
+					};
+				};
+			};
+			buildConfigurationList = 15D5D3AEE37316E99A577578 /* Build configuration list for PBXProject "Tamor" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = D7FDC455EA2BEE7B502F57FE;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 387CC0B0A29FA93CD0DBE516 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				038A7940CDA2C140386A2C07 /* Tamor */,
+				64C861822FAC799163CBD643 /* TamorTests */,
+				9E8B5C4C70C320768BDD02DC /* TamorUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		1F0CC5C2D02304354FEAEF59 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				13193493727544CF57237D06 /* Assets.xcassets in Resources */,
+				7DA0553284241384729DF3EE /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		2BD66AAB762C44E7054B3925 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CAFD468FC3AB6D46B00591C2 /* JewelSceneTests.swift in Sources */,
+				B5CCAED58AF37A57B3C51517 /* TamorTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		61A04BA445E2A5E24139CC42 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				266AA44D3FE3EC17FC56224E /* CrackMaterial.metal in Sources */,
+				78F06B3697B9A95C44379C14 /* CrackMaterialRenderer.swift in Sources */,
+				78B5AF4FFDB07E5E7F324FED /* CrackMetrics.swift in Sources */,
+				2A85C0300623CAA31149700A /* CrackNetwork.swift in Sources */,
+				54D40BCEBF1F543FB18CE8C6 /* GameRules.swift in Sources */,
+				D0F3870BFF9D4754AA4B5DDC /* GemRayResources.swift in Sources */,
+				BB17D7D343DE42C36A24B9A7 /* GlassBreakGeometry.swift in Sources */,
+				6FA93279374CAC1475D0BC66 /* GlassBreakState.swift in Sources */,
+				F9AFF605BB83BA245BADC200 /* GlassCrack.swift in Sources */,
+				6DCC61BABC52E760DBC47CEF /* GlassFragmentEngine.swift in Sources */,
+				0B47C72AF7D262F598F7862D /* GlassFragmentShaders.metal in Sources */,
+				DE55C356DDF8C4544D032C49 /* GlassObject.swift in Sources */,
+				1AB87E1D5F6A2AF2354418A4 /* GlassRayEngine.swift in Sources */,
+				B259B62D18E331A2CF7C4EE2 /* GlassRayScene.swift in Sources */,
+				D734E7D81F316C99E3177CBD /* GlassRayTracing.metal in Sources */,
+				0BF9D2A4B96A196D855C956C /* GlassStudyRenderer.swift in Sources */,
+				E1F10D0D79B4A631087363D9 /* GlassStudyShaders.metal in Sources */,
+				D2EF3389086BF9F635E24166 /* JewelCatalog.swift in Sources */,
+				07650F2A96421AE5EFEE6190 /* JewelGeometry.swift in Sources */,
+				C011DEF73456FC56A656265A /* JewelMetalView.swift in Sources */,
+				7113820542569092D2508EA6 /* JewelMiniSession.swift in Sources */,
+				0891F67D2988E45B04776677 /* JewelRenderer.swift in Sources */,
+				0833A73E57DB2CACB0E78C37 /* JewelRingApp.swift in Sources */,
+				E8478719C036D8312849967F /* JewelSave.swift in Sources */,
+				211D1D4C9BF904076A188B6C /* JewelSceneState.swift in Sources */,
+				E1178F9483BE7366F342E067 /* JewelShaders.metal in Sources */,
+				B7AB7CFCB3696F04F552A412 /* MiniGameEngine.swift in Sources */,
+				494C0355C4182649AC508658 /* MiniGameMetalView.swift in Sources */,
+				1DB01B2AD10C34B8FA70AFDF /* MiniGameScreen.swift in Sources */,
+				9DDE72778AC346C0A4E9AAFF /* PlayerProgress.swift in Sources */,
+				BDCC36971085D746069ACF81 /* RenderQuality.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F5B6A4A4DBF7231F158F9FBC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				809C1CD99E47B777CE3FEE24 /* JewelRingUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		7E2D614D9E48769B92BFC82B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 038A7940CDA2C140386A2C07 /* Tamor */;
+			targetProxy = 388D158A009FB79E15C38EDC /* PBXContainerItemProxy */;
+		};
+		BBFA96F4E89795DE20D3411D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 038A7940CDA2C140386A2C07 /* Tamor */;
+			targetProxy = DFAA76C0A8957335BDC0BC51 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		09A9E391CC50FC02EC745A28 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 2;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CADisableMinimumFrameDurationOnPhone = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Tamor;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIRequiresFullScreen = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.3.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.marcottlab.tamor;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) TAMOR";
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		66BFE4E5A1054A5A7F1196EF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 2;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CADisableMinimumFrameDurationOnPhone = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Tamor;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIRequiresFullScreen = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.3.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.marcottlab.tamor;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG TAMOR";
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		74C914BBABE20FDEEC28328C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		96F93249BD0A4AEB7D79D9BB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		993744273D31EC5708474B18 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.marcottlab.TamorUITests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Tamor;
+			};
+			name = Debug;
+		};
+		A4BA51463A53A6FFBD0F5844 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.marcottlab.TamorUITests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Tamor;
+			};
+			name = Release;
+		};
+		EB4681A24D3FA6AA8FDE5CEB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.marcottlab.TamorTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Tamor.app/Tamor";
+			};
+			name = Debug;
+		};
+		ED02A6BD95C1B78F5A911612 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.marcottlab.TamorTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Tamor.app/Tamor";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		15D5D3AEE37316E99A577578 /* Build configuration list for PBXProject "Tamor" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				96F93249BD0A4AEB7D79D9BB /* Debug */,
+				74C914BBABE20FDEEC28328C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		97CD3110B3ED5FFACAD2E15D /* Build configuration list for PBXNativeTarget "Tamor" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				66BFE4E5A1054A5A7F1196EF /* Debug */,
+				09A9E391CC50FC02EC745A28 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		A79B9F97654B7A907FBB28C6 /* Build configuration list for PBXNativeTarget "TamorTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EB4681A24D3FA6AA8FDE5CEB /* Debug */,
+				ED02A6BD95C1B78F5A911612 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		AB26C93B699806200E7B51FA /* Build configuration list for PBXNativeTarget "TamorUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				993744273D31EC5708474B18 /* Debug */,
+				A4BA51463A53A6FFBD0F5844 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = BDE18F6B2070156147D00042 /* Project object */;
+}
