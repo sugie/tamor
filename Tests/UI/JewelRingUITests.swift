@@ -45,6 +45,23 @@ final class JewelRingUITests:XCTestCase {
         screenshot("grass-trace");abandon()
         XCTAssertEqual(app.staticTexts["ring.count"].label,"0 / 4")
     }
+    func testWindowLightSettingPersistsAndInspectionRenders() {
+        app.buttons["jewel.settings"].tap()
+        let motion=app.switches["settings.windowMotion"]
+        XCTAssertTrue(motion.waitForExistence(timeout:5));XCTAssertEqual(motion.value as? String,"1")
+        // SwiftUI exposes the whole label row as the switch; operate the trailing thumb.
+        motion.coordinate(withNormalizedOffset:.init(dx:0.94,dy:0.5)).press(forDuration:0.1,thenDragTo:motion.coordinate(withNormalizedOffset:.init(dx:0.82,dy:0.5)))
+        expectation(for:NSPredicate(format:"value == %@","0"),evaluatedWith:motion);waitForExpectations(timeout:3)
+        app.buttons["settings.done"].tap();app.terminate();app.launch()
+        app.buttons["jewel.settings"].tap()
+        XCTAssertTrue(motion.waitForExistence(timeout:5));XCTAssertEqual(motion.value as? String,"0")
+        app.buttons["settings.done"].tap();app.buttons["ring.preview"].tap()
+        screenshot("window-ring")
+        app.buttons["jewel.diamond"].tap()
+        XCTAssertTrue(app.buttons["level.0"].waitForExistence(timeout:5));app.buttons["level.0"].tap()
+        XCTAssertFalse(app.staticTexts["render.error"].exists)
+        screenshot("window-diamond")
+    }
     func testKurukuruRewardPersistenceProgressAndPause() {
         pick("blackOnyx");XCTAssertFalse(app.buttons["mini.start"].exists)
         let cells=app.buttons.matching(NSPredicate(format:"identifier BEGINSWITH 'mini.cell.'"))

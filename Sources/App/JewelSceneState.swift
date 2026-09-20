@@ -18,6 +18,7 @@ import simd
     @Published var savingReward=false
     @Published var traceTolerance:Double=0.06
     @Published var quality:QualityPreference = .automatic { didSet { defaults?.set(quality.rawValue,forKey:"tamor.quality") } }
+    @Published var windowLightMotion=true { didSet { defaults?.set(windowLightMotion,forKey:"tamor.windowLightMotion") } }
     @Published var rayTracing=false { didSet { defaults?.set(rayTracing,forKey:"tamor.rt") } }
     @Published var rayAvailable=false
     @Published var rayStatus="端末のMetal機能を確認中"
@@ -69,6 +70,7 @@ import simd
         defaults?.set(deviceID,forKey:"tamor.deviceID")
         quality=QualityPreference(rawValue:defaults?.string(forKey:"tamor.quality") ?? "") ?? .automatic
         rayTracing=defaults?.bool(forKey:"tamor.rt") ?? false
+        windowLightMotion=defaults?.object(forKey:"tamor.windowLightMotion") as? Bool ?? true
         do { let (s,recovered)=try files.load();save=s;ringAngle=s.rotation
             selected=JewelKind.allCases.first(where:{$0.key==s.selectedID})?.rawValue ?? 0
             if recovered { saveMessage="バックアップから復元しました。" }

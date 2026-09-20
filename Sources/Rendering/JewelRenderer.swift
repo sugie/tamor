@@ -22,6 +22,7 @@ import simd
     let latticeModels:[simd_float4x4]
     let bondModels:[simd_float4x4]
     var slot=0
+    var windowTime:Float=0
     var last:CFTimeInterval=0
     var ready=false
     let capacity=8192
@@ -93,6 +94,10 @@ import simd
         let buffer=instanceBuffers[slot];slot=(slot+1)%3
         all.withUnsafeBytes { if let base=$0.baseAddress { memcpy(buffer.contents(),base,$0.count) } }
         var frame=JewelFrame(values:.init(Float(state.time),Float(state.inspectionProgress),Float(state.renderedZoom),Float(state.ringAngle)),dimensions:.init(Float(view.drawableSize.width),Float(view.drawableSize.height),state.reduceMotion ? 1:0,Float(state.decoratedSlots+state.decoration*4096)))
+        if state.windowLightMotion,!state.reduceMotion,tier != .low {
+            windowTime+=Float(min(0.1,max(0,dt)))
+        }
+        frame.scene.y=windowTime
         do {
             try backSurface.encode(command:command,size:view.drawableSize,frame:frame,buffer:buffer,draws:groups.gems.enumerated().map{(gems[Int($0.element.material.y)],1,$0.offset)})
         } catch {state.error="宝石の透過描画を準備できませんでした。";return}

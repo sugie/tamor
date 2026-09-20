@@ -29,10 +29,44 @@ float3 studio(float3 d) {
     float rim=pow(max(0.0,dot(d,normalize(float3(0.15,-0.6,-0.8)))),34.0);
     return c+key*float3(5.0,4.7,4.1)+strip*float3(2.2,2.8,3.6)+rim*float3(2.5,1.9,1.15);
 }
+// Shared physical window: background, transmitted rays and reflected illumination.
+// Coordinates are in the ring's world space; slot rotation never moves the window.
+float windowPanes(float2 p,float aa) {
+    float2 q=float2(dot(p,float2(0.94,0.342)),dot(p,float2(-0.342,0.94)))+float2(0.09,0.04);
+    float2 spacing=float2(0.32,0.44);
+    float2 bars=abs(fract(q/spacing+0.5)-0.5)*spacing;
+    float pane=smoothstep(0.013-aa,0.013+aa,min(bars.x,bars.y));
+    float frame=1-smoothstep(0.035,0.06,max(abs(q.x)-2.2,abs(q.y)-1.9));
+    return pane*frame;
+}
+float3 windowRoom(float2 p,constant JewelFrame& frame) {
+    float aa=max(0.002,2.5/max(frame.dimensions.x,1.0));
+    float panes=windowPanes(p,aa);
+    float t=frame.scene.y; // A separate clock freezes in low power / Reduce Motion / static mode.
+    float beam=exp(-pow((p.x*0.7+p.y*0.3-0.35*sin(t*0.16))*1.8,2.0));
+    float falloff=0.62+0.38*exp(-dot(p-float2(-0.35,0.45),p-float2(-0.35,0.45))*0.45);
+    float3 wall=float3(0.055,0.082,0.12);
+    float3 c=wall+float3(0.24,0.29,0.34)*panes*falloff*(0.65+0.35*beam);
+    float warm=exp(-dot((p-float2(0.62,0.58))*float2(7,9),(p-float2(0.62,0.58))*float2(7,9)));
+    c+=float3(0.22,0.12,0.035)*warm;
+    // Quiet the backdrop continuously as atoms replace the gem, without changing scenes.
+    float lattice=smoothstep(1.5,2.6,frame.values.z)*frame.values.y;
+    return mix(c,float3(0.055,0.085,0.12),lattice*0.9);
+}
+float3 gemLighting(float3 direction,float3 origin,constant JewelFrame& frame) {
+    if(frame.scene.x>0.5)return studio(direction);
+    float3 d=normalize(direction);
+    float plane=d.z>=0 ? 1.8:-1.2;
+    float distance=abs(plane-origin.z)/max(0.25,abs(d.z));
+    float2 p=origin.xy+d.xy*distance;
+    float facing=smoothstep(0.05,0.5,d.z);
+    // The front-facing studio window uses the same mullions; onyx reflects it without transmission.
+    return studio(d)*0.4+windowRoom(p,frame)*(0.45+1.7*facing);
+}
 float3 tone(float3 c) {return clamp((c*(2.51*c+0.03))/(c*(2.43*c+0.59)+0.14),0.0,1.0);}
 float4 shadeGem(JewelOut in,constant JewelFrame& frame,float pathMM,float3 inside) {
     float noise=fract(sin(dot(floor(in.position.xy),float2(12.9898,78.233)))*43758.5453);
-    if(noise>in.material.z) discard_fragment();
+    if(in.material.z<=0 || noise>in.material.z) discard_fragment();
     if(in.material.x<0.5 && in.material.w>0 && (in.local.x+1.0)*0.5<in.material.w) discard_fragment();
     float3 n=normalize(in.normal),v=float3(0,0,1),l=normalize(float3(-0.7,0.85,1.6));
     float diffuse=max(0.0,dot(n,l));float3 c=in.color.rgb;
@@ -41,7 +75,7 @@ float4 shadeGem(JewelOut in,constant JewelFrame& frame,float pathMM,float3 insid
         if(frame.dimensions.w>=12288)m.roughness*=0.65;
         float nv=max(0.001,abs(dot(n,v))),f0=pow((m.ior-1)/(m.ior+1),2.0);
         float fresnel=f0+(1-f0)*pow(1-nv,5.0);
-        float3 reflection=studio(reflect(-v,n));
+        float3 reflection=gemLighting(reflect(-v,n),in.world,frame);
         float a=m.roughness*m.roughness,nh=max(0.0,dot(n,normalize(l+v)));
         float distribution=a*a/(M_PI_F*pow(nh*nh*(a*a-1)+1,2.0)+0.00001);
         float3 trans=exp(-m.absorption*pathMM);
@@ -60,12 +94,12 @@ float3 ringBackdrop(float2 p,constant JewelFrame& frame);
 float3 boardBackdrop(float2 p,constant JewelFrame& frame);
 float3 linearColor(float3 c) {return select(pow((c+0.055)/1.055,float3(2.4)),c/12.92,c<=0.04045);}
 float3 transmittedScene(float3 exitPoint,float3 direction,constant JewelFrame& frame) {
-    if(direction.z>=-0.05 || frame.scene.x>1.5)return studio(direction);
+    if(direction.z>=-0.05 || frame.scene.x>1.5)return gemLighting(direction,exitPoint,frame);
     float distance=max(0.0,exitPoint.z+1.2)/max(0.15,-direction.z);
     float2 point=exitPoint.xy+direction.xy*distance;
-    float3 background=frame.scene.x>0.5 ? boardBackdrop(point,frame):ringBackdrop(point,frame);
-    // Refract the actual procedural backdrop. The studio adds bounded incident illumination.
-    return linearColor(background)+studio(direction)*0.12;
+    // Ring background and transmission share linear radiance, then the same tone mapping.
+    if(frame.scene.x<0.5)return ringBackdrop(point,frame);
+    return linearColor(boardBackdrop(point,frame))+studio(direction)*0.12;
 }
 fragment float4 jewelBackFragment(JewelOut in [[stage_in]]) {
     if(in.normal.z>=-0.0001 || in.material.z<0.001)discard_fragment();
@@ -86,7 +120,7 @@ fragment float4 jewelFragment(JewelOut in [[stage_in]],constant JewelFrame& fram
     float4 shifted=backs.sample(sampleMap,uv+offset);
     if(abs(length(shifted.xyz)-float(in.objectID))<0.35 && shifted.w>in.position.z)back=shifted;
     if(abs(length(back.xyz)-float(in.objectID))>=0.35 || back.w<=in.position.z)
-        return shadeGem(in,frame,2.0,studio(direction)*0.12);
+        return shadeGem(in,frame,2.0,gemLighting(direction,in.world,frame)*0.35);
     depth=(0.5-back.w)/0.2;
     distance=max(0.0,in.world.z-depth)/max(0.15,-direction.z);
     float pathMM=clamp(distance/max(0.001,in.scale)*5.0,0.02,25.0);
@@ -95,8 +129,8 @@ fragment float4 jewelFragment(JewelOut in [[stage_in]],constant JewelFrame& fram
     float f0=pow((m.ior-1)/(m.ior+1),2.0);
     float exitF=f0+(1-f0)*pow(1-abs(dot(direction,normal)),5.0);
     bool tir=length_squared(exitDirection)<0.0001;
-    float3 inside=tir ? studio(reflected)*0.78 :
-        transmittedScene(in.world+direction*distance,exitDirection,frame)*(1-exitF)+studio(reflected)*exitF;
+    float3 inside=tir ? gemLighting(reflected,in.world+direction*distance,frame)*0.78 :
+        transmittedScene(in.world+direction*distance,exitDirection,frame)*(1-exitF)+gemLighting(reflected,in.world+direction*distance,frame)*exitF;
     return shadeGem(in,frame,pathMM*(tir ? 1.4:1.0),inside);
 }
 fragment float4 jewelRayFragment(JewelOut in [[stage_in]],constant JewelFrame& frame [[buffer(0)]],
@@ -131,14 +165,15 @@ vertex JewelBG jewelBackgroundVertex(uint id [[vertex_id]]) {
 }
 float3 ringBackdrop(float2 p,constant JewelFrame& frame) {
     float r=length(p),aa=3.0/max(frame.dimensions.x,1.0);
-    float3 c=float3(0.025,0.043,0.063);
-    float halo=exp(-pow((r-0.66)*5,2))*0.023;
-    c+=float3(0.38,0.49,0.55)*halo;
+    float3 c=windowRoom(p,frame);
+    // Darken the rim into the surrounding app chrome, keeping all twelve seats illuminated.
+    float vignette=smoothstep(0.91,1.19,r);
+    c=mix(c,float3(0.00194,0.00333,0.00521),vignette);
     if(frame.values.y<0.999) {
         float orbit=(1-frame.values.y)*(1-smoothstep(0.001,0.001+aa,abs(r-0.66)))*0.22;
         float outer=(1-frame.values.y)*(1-smoothstep(0.0005,0.0005+aa,abs(r-0.89)))*0.07;
         float inner=(1-frame.values.y)*(1-smoothstep(0.0005,0.0005+aa,abs(r-0.43)))*0.055;
-        c+=float3(0.66,0.53,0.33)*(orbit+outer+inner);
+        c=mix(c,float3(0.09,0.055,0.019),clamp((orbit+outer+inner)*2.5,0.0,1.0));
         for(int slot=0;slot<12;slot++) {
             float t=slot*2*M_PI_F/12+frame.values.w;
             float2 q=p-float2(sin(t),-cos(t))*0.66;
@@ -154,7 +189,7 @@ float3 ringBackdrop(float2 p,constant JewelFrame& frame) {
                 if(style==2)c+=float3(0.34,0.26,0.09)*exp(-pow((length(q)-0.135)*32,2))*0.2*(1-frame.values.y);
             }
             float strength=active ? 0.42:0.075;
-            c+=float3(0.72,0.58,0.34)*(seat+outerSeat*0.25)*strength*(1-frame.values.y);
+            c=mix(c,float3(0.09,0.055,0.019),clamp((seat+outerSeat*0.25)*strength*(1-frame.values.y)*1.8,0.0,1.0));
         }
         float a=atan2(p.y,p.x),tick=pow(max(0.0,cos(a*60.0)),90.0);
         c+=float3(0.58,0.50,0.36)*tick*smoothstep(0.86,0.87,r)*(1-smoothstep(0.888,0.9,r))*0.30;
@@ -180,7 +215,7 @@ float3 boardBackdrop(float2 p,constant JewelFrame& frame) {
 }
 
 fragment float4 jewelBackgroundFragment(JewelBG in [[stage_in]],constant JewelFrame& frame [[buffer(0)]]) {
-    return float4(linearColor(ringBackdrop(in.uv,frame)),1);
+    return float4(tone(ringBackdrop(in.uv,frame)),1);
 }
 fragment float4 miniBoardBackground(JewelBG in [[stage_in]],constant JewelFrame& frame [[buffer(0)]]) {
     return float4(linearColor(boardBackdrop(in.uv,frame)),1);

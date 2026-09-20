@@ -125,7 +125,10 @@ final class JewelTouchView:MTKView {
             if labels[jewel.rawValue]==nil {label.font = .systemFont(ofSize:9,weight:.medium);label.textAlignment = .center;label.numberOfLines=2;label.isUserInteractionEnabled=false;label.isAccessibilityElement=false;addSubview(label);labels[jewel.rawValue]=label}
             let owned=state.save.inventory[jewel.key] != nil
             label.text=state.visible.contains(jewel) ? "":jewel.name+"\n"+jewel.game.title
-            label.textColor=UIColor(red:0.8,green:0.7,blue:0.52,alpha:owned ? 0.6:0.9)
+            label.textColor=UIColor(white:0.96,alpha:owned ? 0.8:1)
+            label.backgroundColor=UIColor(red:0.025,green:0.043,blue:0.063,alpha:0.82)
+            label.layer.cornerRadius=4;label.clipsToBounds=true
+            label.isHidden=state.visible.contains(jewel)
             label.alpha=1-state.inspectionProgress
             let p=state.position(jewel)
             label.frame=CGRect(x:(p.x+1)*bounds.width/2-55,y:(1-p.y)*bounds.height/2+bounds.width*0.058,width:110,height:30)

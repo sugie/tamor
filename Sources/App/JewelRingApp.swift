@@ -40,7 +40,7 @@ struct JewelHome:View {
                         JewelMetalView(state:state)
                         if let error=state.error { Text(error).padding().accessibilityIdentifier("render.error") }
                         if state.count==0 && !state.inspecting {
-                            VStack(spacing:14) { Image(systemName:"sparkles").font(.system(size:34,weight:.ultraLight)).foregroundStyle(jewelGold);Text("最初の宝石を見つけよう").font(.system(size:16,weight:.light));Text("ミニゲームをクリアすると\nこのリングに宝石が現れます。").font(.system(size:11)).foregroundStyle(.secondary).multilineTextAlignment(.center) }.allowsHitTesting(false).accessibilityIdentifier("ring.empty")
+                            VStack(spacing:14) { Image(systemName:"sparkles").font(.system(size:34,weight:.ultraLight)).foregroundStyle(jewelGold);Text("最初の宝石を見つけよう").font(.system(size:16,weight:.light));Text("ミニゲームをクリアすると\nこのリングに宝石が現れます。").font(.system(size:11)).foregroundStyle(.secondary).multilineTextAlignment(.center) }.padding(18).background(jewelBackground.opacity(0.85),in:RoundedRectangle(cornerRadius:16)).allowsHitTesting(false).accessibilityIdentifier("ring.empty")
                         }
                     }.frame(width:min(geo.size.width,480),height:min(geo.size.width,480))
                     if state.inspecting { inspector.padding(.horizontal,24) } else { collection.padding(.horizontal,24) }
@@ -155,6 +155,8 @@ struct JewelHome:View {
     private var settingsView:some View {
         NavigationStack { Form {
             Section("光と描画品質") {
+                Toggle("窓からの光をゆっくり動かす",isOn:$state.windowLightMotion).accessibilityIdentifier("settings.windowMotion")
+                Text("光の窓格子が宝石の中で屈折します。OFF・省電力・視差効果を減らす設定では背景の光が静止します。").font(.caption).foregroundStyle(.secondary)
                 Toggle("レイトレーシング",isOn:$state.rayTracing).disabled(!state.rayAvailable).accessibilityIdentifier("settings.rayTracing")
                 Text(state.rayStatus).font(.caption)
                 Text("ON時は宝石の詳細観察で内部反射を計算します。省電力・高温時と原子表示時は通常描画になります。").font(.caption).foregroundStyle(.secondary)
