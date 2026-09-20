@@ -80,6 +80,7 @@ final class MiniTouchView:MTKView {
     let device:MTLDevice
     let queue:MTLCommandQueue
     let pipeline:MTLRenderPipelineState
+    let backSurface:GemBackSurface
     let markerPipeline:MTLRenderPipelineState
     let markerDepth:MTLDepthStencilState
     let quad:JewelMesh
@@ -95,6 +96,7 @@ final class MiniTouchView:MTKView {
         session=s
         guard let d=MTLCreateSystemDefaultDevice(),let q=d.makeCommandQueue(),let lib=d.makeDefaultLibrary() else { throw SaveFailure.unreadable }
         device=d;queue=q
+        backSurface=try GemBackSurface(device:d,library:lib)
         func make(_ vertex:String,_ fragment:String,blend:Bool=false)throws->MTLRenderPipelineState {
             let p=MTLRenderPipelineDescriptor();p.vertexFunction=lib.makeFunction(name:vertex);p.fragmentFunction=lib.makeFunction(name:fragment)
             p.colorAttachments[0].pixelFormat = .bgra8Unorm_srgb;p.depthAttachmentPixelFormat = .depth32Float
@@ -121,7 +123,7 @@ final class MiniTouchView:MTKView {
         if v.preferredFramesPerSecond != fps {v.preferredFramesPerSecond=fps}
         (v as? MiniTouchView)?.refresh()
         guard let pass=v.currentRenderPassDescriptor,let drawable=v.currentDrawable,semaphore.wait(timeout:.now()) == .success else { return }
-        guard let c=queue.makeCommandBuffer(),let e=c.makeRenderCommandEncoder(descriptor:pass) else { semaphore.signal();return }
+        guard let c=queue.makeCommandBuffer() else { semaphore.signal();return }
         let s=session,n=s.engine.board.size,time=s.engine.activeTime
         var gems:[JewelInstance]=[],dots:[JewelInstance]=[]
         var marker:JewelInstance?
@@ -166,10 +168,15 @@ final class MiniTouchView:MTKView {
             }
         }
         var frame=JewelFrame(values:.init(Float(time),Float(n),0,0),dimensions:.init(Float(v.drawableSize.width),Float(v.drawableSize.height),0,0))
-        e.setDepthStencilState(depth);e.setVertexBytes(&frame,length:MemoryLayout<JewelFrame>.stride,index:2);e.setFragmentBytes(&frame,length:MemoryLayout<JewelFrame>.stride,index:0)
-        if s.kind.game == .kurukuru { e.setRenderPipelineState(bg);e.drawPrimitives(type:.triangle,vertexStart:0,vertexCount:3) }
         let all=gems+dots+(marker.map{[$0]} ?? []),b=buffers[slot];slot=(slot+1)%3
         all.withUnsafeBytes { if let p=$0.baseAddress { memcpy(b.contents(),p,$0.count) } }
+        frame.scene.x=s.kind.game == .kurukuru ? 1:2
+        do {try backSurface.encode(command:c,size:v.drawableSize,frame:frame,buffer:b,draws:[(gem,gems.count,0)])}
+        catch {semaphore.signal();s.renderError="宝石の透過描画を準備できませんでした。";return}
+        guard let e=c.makeRenderCommandEncoder(descriptor:pass) else {semaphore.signal();return}
+        e.setFragmentTexture(backSurface.texture,index:0)
+        e.setDepthStencilState(depth);e.setVertexBytes(&frame,length:MemoryLayout<JewelFrame>.stride,index:2);e.setFragmentBytes(&frame,length:MemoryLayout<JewelFrame>.stride,index:0)
+        if s.kind.game == .kurukuru { e.setRenderPipelineState(bg);e.drawPrimitives(type:.triangle,vertexStart:0,vertexCount:3) }
         e.setRenderPipelineState(pipeline);e.setVertexBuffer(b,offset:0,index:1)
         if !gems.isEmpty { e.setVertexBuffer(gem.buffer,offset:0,index:0);e.drawPrimitives(type:.triangle,vertexStart:0,vertexCount:gem.count,instanceCount:gems.count) }
         if !dots.isEmpty { e.setVertexBuffer(sphere.buffer,offset:0,index:0);e.drawPrimitives(type:.triangle,vertexStart:0,vertexCount:sphere.count,instanceCount:dots.count,baseInstance:gems.count) }

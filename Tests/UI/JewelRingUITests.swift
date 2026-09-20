@@ -16,10 +16,6 @@ final class JewelRingUITests:XCTestCase {
         XCTAssertTrue(app.buttons["mini.close"].waitForExistence(timeout:10))
         XCTAssertFalse(app.staticTexts["mini.error"].exists)
     }
-    func start() {
-        let b=app.buttons["mini.start"];XCTAssertTrue(b.waitForExistence(timeout:15))
-        expectation(for:NSPredicate(format:"enabled == true"),evaluatedWith:b);waitForExpectations(timeout:15);b.tap()
-    }
     func abandon() {
         app.buttons["mini.close"].tap();app.buttons["報酬なしで終了"].tap()
         XCTAssertTrue(app.buttons["ring.games"].waitForExistence(timeout:8))
@@ -50,7 +46,7 @@ final class JewelRingUITests:XCTestCase {
         XCTAssertEqual(app.staticTexts["ring.count"].label,"0 / 4")
     }
     func testKurukuruRewardPersistenceProgressAndPause() {
-        pick("blackOnyx");start()
+        pick("blackOnyx");XCTAssertFalse(app.buttons["mini.start"].exists)
         let cells=app.buttons.matching(NSPredicate(format:"identifier BEGINSWITH 'mini.cell.'"))
         XCTAssertTrue(cells.firstMatch.waitForExistence(timeout:5));XCTAssertEqual(cells.count,16)
         screenshot("kurukuru-4x4")

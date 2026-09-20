@@ -5,6 +5,7 @@ import simd
     let device:MTLDevice
     let queue:MTLCommandQueue
     let pipeline:MTLRenderPipelineState
+    let backSurface:GemBackSurface
     let background:MTLRenderPipelineState
     let depth:MTLDepthStencilState
     let backgroundDepth:MTLDepthStencilState
@@ -29,6 +30,7 @@ import simd
             throw NSError(domain:"JewelRing",code:2,userInfo:[NSLocalizedDescriptionKey:"Metalを初期化できませんでした。"])
         }
         self.device=device;self.queue=queue;self.state=state
+        backSurface=try GemBackSurface(device:device,library:library)
         func make(_ vertex:String,_ fragment:String) throws -> MTLRenderPipelineState {
             let p=MTLRenderPipelineDescriptor();p.vertexFunction=library.makeFunction(name:vertex);p.fragmentFunction=library.makeFunction(name:fragment)
             p.colorAttachments[0].pixelFormat = .bgra8Unorm_srgb;p.depthAttachmentPixelFormat = .depth32Float
@@ -87,10 +89,15 @@ import simd
         defer { if !committed { semaphore.signal() } }
         let groups=instances()
         let all=groups.gems+groups.atoms+groups.bonds
-        guard all.count<=capacity,let command=queue.makeCommandBuffer(),let encoder=command.makeRenderCommandEncoder(descriptor:descriptor) else { return }
+        guard all.count<=capacity,let command=queue.makeCommandBuffer() else { return }
         let buffer=instanceBuffers[slot];slot=(slot+1)%3
         all.withUnsafeBytes { if let base=$0.baseAddress { memcpy(buffer.contents(),base,$0.count) } }
         var frame=JewelFrame(values:.init(Float(state.time),Float(state.inspectionProgress),Float(state.renderedZoom),Float(state.ringAngle)),dimensions:.init(Float(view.drawableSize.width),Float(view.drawableSize.height),state.reduceMotion ? 1:0,Float(state.decoratedSlots+state.decoration*4096)))
+        do {
+            try backSurface.encode(command:command,size:view.drawableSize,frame:frame,buffer:buffer,draws:groups.gems.enumerated().map{(gems[Int($0.element.material.y)],1,$0.offset)})
+        } catch {state.error="宝石の透過描画を準備できませんでした。";return}
+        guard let encoder=command.makeRenderCommandEncoder(descriptor:descriptor) else {return}
+        encoder.setFragmentTexture(backSurface.texture,index:0)
         encoder.setVertexBytes(&frame,length:MemoryLayout<JewelFrame>.stride,index:2)
         encoder.setFragmentBytes(&frame,length:MemoryLayout<JewelFrame>.stride,index:0)
         encoder.setRenderPipelineState(background);encoder.setDepthStencilState(backgroundDepth)

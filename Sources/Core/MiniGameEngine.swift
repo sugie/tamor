@@ -100,7 +100,7 @@ struct MiniGameEngine {
         }
     }
     mutating func autoStart(at now:Double) {
-        guard type == .grassBreak,phase == .ready else { return }
+        guard type != .grassTrace,phase == .ready else { return }
         autoStarting=true;savedPhase = .ready;phase = .countdown;countdownStart=now;lastWall=now
     }
     mutating func begin(at now:Double) {

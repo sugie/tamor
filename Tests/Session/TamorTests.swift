@@ -2,6 +2,19 @@ import XCTest
 @testable import Tamor
 
 @MainActor final class TamorTests:XCTestCase {
+    func testKurukuruStartsAutomaticallyOnlyAfterReadyAndCountdown() {
+        for kind in [JewelKind.blackOnyx,.emerald] { for size in [4,6] {
+            var time=0.0
+            let run=JewelMiniSession(kind:kind,size:size,preview:false,tolerance:0.06,now:{time},seed:42)
+            time=1;run.tick();XCTAssertEqual(run.engine.phase,.ready)
+            run.rendererReady=true;run.tick();XCTAssertEqual(run.engine.phase,.countdown)
+            run.cell(0);XCTAssertNil(run.engine.selected)
+            time=3.99;run.tick();XCTAssertEqual(run.engine.phase,.countdown)
+            time=4;run.tick();XCTAssertEqual(run.engine.phase,.playing);XCTAssertEqual(run.engine.elapsed,0)
+            time=4.2;run.tick();XCTAssertEqual(run.engine.elapsed,0.2,accuracy:0.0001)
+            run.cell(0);XCTAssertEqual(run.engine.selected,0)
+        }}
+    }
     func testAutoCountdownWaitsForGlassAndPresentation() {
         var time=0.0
         let run=JewelMiniSession(kind:.diamond,size:4,preview:false,tolerance:0.06,now:{time},seed:42)

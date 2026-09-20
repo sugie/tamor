@@ -13,7 +13,7 @@ import simd
     private var cancelWorker:(()->Void)?
     var tier:QualityTier {qualityPolicy.effective(thermal:ProcessInfo.processInfo.thermalState,lowPower:ProcessInfo.processInfo.isLowPowerModeEnabled)}
     func result(deviceID:String)->GameResultEvent {
-        .init(id:id,game:kind.game,gemID:kind.key,rulesVersion:"tamor.3",boardSize:kind.game == .kurukuru ? engine.board.size:0,targetCount:kind.game == .grassBreak ? engine.requiredHits:0,traceTolerance:kind.game == .grassTrace ? engine.tolerance:0,seconds:engine.elapsed,mistakes:engine.mistakes,cracks:engine.cracks.count,hits:engine.hits,won:engine.phase == .won,finishedAt:Date(),deviceID:deviceID)
+        .init(id:id,game:kind.game,gemID:kind.key,rulesVersion:kind.game == .kurukuru ? "tamor.4":"tamor.3",boardSize:kind.game == .kurukuru ? engine.board.size:0,targetCount:kind.game == .grassBreak ? engine.requiredHits:0,traceTolerance:kind.game == .grassTrace ? engine.tolerance:0,seconds:engine.elapsed,mistakes:engine.mistakes,cracks:engine.cracks.count,hits:engine.hits,won:engine.phase == .won,finishedAt:Date(),deviceID:deviceID)
     }
     func observeFrame(cpuMS:Double,gpuMS:Double) {
         qualityPolicy.observe(cpuMS:cpuMS,gpuMS:gpuMS)
@@ -53,7 +53,7 @@ import simd
         if glass.renderPixelLimit != tier.glassPixels {glass.renderPixelLimit=tier.glassPixels}
         let oldPhase=engine.phase,oldCracks=engine.cracks.count
         engine.advance(to:now())
-        if inputReady,engine.phase == .ready,kind.game == .grassBreak { engine.autoStart(at:now()) }
+        if inputReady,engine.phase == .ready,kind.game != .grassTrace { engine.autoStart(at:now()) }
         let paused=engine.phase == .paused
         if glass.animationPaused != paused {glass.animationPaused=paused}
         if oldPhase != engine.phase || oldCracks != engine.cracks.count { syncEffects();notify() }

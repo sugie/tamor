@@ -28,7 +28,7 @@ struct MiniGameScreen:View {
                         jewelBackground.opacity(0.88)
                         VStack(spacing:20) {
                             Text(session.engine.phase == .paused ? "一時停止":"\(session.engine.countdown)").font(.system(size:38,weight:.ultraLight)).accessibilityIdentifier("mini.paused")
-                            if session.engine.phase == .countdown {Text(session.kind.game == .grassBreak ? "赤い点を1.5秒以内にタップ":"まもなく再開します").font(.footnote)}
+                            if session.engine.phase == .countdown {Text(session.kind.game == .grassBreak ? "赤い点を1.5秒以内にタップ":session.kind.game == .kurukuru ? "同じ方向に回る宝石を2つ選ぶ":"まもなく再開します").font(.footnote)}
                             if session.engine.phase == .paused { Button("再開する"){session.resume()}.tint(jewelGold).accessibilityIdentifier("mini.resume") }
                         }
                     }
@@ -80,8 +80,7 @@ struct MiniGameScreen:View {
                 } else if session.kind.game == .grassBreak {
                     Text("ガラスを準備中。3秒後に自動で始まります。").font(.footnote)
                 } else {
-                    Text(session.kind.game == .kurukuru ? "同じ方向に回る宝石を2つ選ぶ":"赤く光る点を1.5秒以内にタップ").font(.system(size:12)).foregroundStyle(.secondary)
-                    Button {session.begin()} label:{goldButton("スタート",icon:"play.fill")}.accessibilityIdentifier("mini.start").disabled(!session.inputReady)
+                    Text("盤面を準備中。3秒後に自動で始まります。").font(.footnote)
                 }
             case .playing:
                 Text(session.kind.game == .kurukuru ? "対象の宝石が対になって回転しています。" : session.kind.game == .grassTrace ? "緑の点を追いかけてください。":"赤い点をタップして、ガラスを割ろう。").font(.system(size:12)).foregroundStyle(.secondary)

@@ -20,6 +20,7 @@
 		2A85C0300623CAA31149700A /* CrackNetwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65D6EBC1F8CF253C150FB79D /* CrackNetwork.swift */; };
 		494C0355C4182649AC508658 /* MiniGameMetalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF2F707D92A4AF385218B617 /* MiniGameMetalView.swift */; };
 		54D40BCEBF1F543FB18CE8C6 /* GameRules.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CE3C7EA747B88F3CDB14406 /* GameRules.swift */; };
+		588D55937B07199666453819 /* GemBackSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53B730CFBEDD49460EE2E156 /* GemBackSurface.swift */; };
 		6DCC61BABC52E760DBC47CEF /* GlassFragmentEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1EA09E335AD7C14A39CB40F /* GlassFragmentEngine.swift */; };
 		6FA93279374CAC1475D0BC66 /* GlassBreakState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 909779C03FF0564969CD6C0D /* GlassBreakState.swift */; };
 		7113820542569092D2508EA6 /* JewelMiniSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBBBAE6927CB41E13A55D1B5 /* JewelMiniSession.swift */; };
@@ -42,6 +43,7 @@
 		E1178F9483BE7366F342E067 /* JewelShaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 33B3F411316CF64BAA591E61 /* JewelShaders.metal */; };
 		E1F10D0D79B4A631087363D9 /* GlassStudyShaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 0164C03D897463464D7A8EA3 /* GlassStudyShaders.metal */; };
 		E8478719C036D8312849967F /* JewelSave.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8056086E94B0A799C0991712 /* JewelSave.swift */; };
+		E9798320F701A4BCEB9DBBFE /* GemTransmissionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20F31BC6A4625C0A30503039 /* GemTransmissionTests.swift */; };
 		F9AFF605BB83BA245BADC200 /* GlassCrack.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DBE4AC032DC647F0E42BF13 /* GlassCrack.swift */; };
 /* End PBXBuildFile section */
 
@@ -72,12 +74,14 @@
 		1BED6613EEBAE841D88CB9EB /* GlassRayScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassRayScene.swift; sourceTree = "<group>"; };
 		1C1B4CB32672DA13450DC62E /* TamorUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = TamorUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1C403F85B5A151D44F2A4A2C /* CrackMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrackMetrics.swift; sourceTree = "<group>"; };
+		20F31BC6A4625C0A30503039 /* GemTransmissionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GemTransmissionTests.swift; sourceTree = "<group>"; };
 		22D7404A020C6B78B69050F5 /* Tamor.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Tamor.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2CE3C7EA747B88F3CDB14406 /* GameRules.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameRules.swift; sourceTree = "<group>"; };
 		2F6137DD258DC12395116DAD /* JewelMetalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JewelMetalView.swift; sourceTree = "<group>"; };
 		33B3F411316CF64BAA591E61 /* JewelShaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = JewelShaders.metal; sourceTree = "<group>"; };
 		3A8E9F3572DF4626338822D1 /* GemRayResources.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GemRayResources.swift; sourceTree = "<group>"; };
 		4D6F989501CCA86702EADEE7 /* MiniGameEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiniGameEngine.swift; sourceTree = "<group>"; };
+		53B730CFBEDD49460EE2E156 /* GemBackSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GemBackSurface.swift; sourceTree = "<group>"; };
 		54775F15793955AE0FB1449F /* GlassFragmentShaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = GlassFragmentShaders.metal; sourceTree = "<group>"; };
 		5C7E97D8807EE7E26461B310 /* JewelCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JewelCatalog.swift; sourceTree = "<group>"; };
 		5D40641F59147995FEF16343 /* TamorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TamorTests.swift; sourceTree = "<group>"; };
@@ -119,6 +123,7 @@
 		3C2E06563B1F231695565596 /* Session */ = {
 			isa = PBXGroup;
 			children = (
+				20F31BC6A4625C0A30503039 /* GemTransmissionTests.swift */,
 				E0F67C170EFCF90512E9C45F /* JewelSceneTests.swift */,
 				5D40641F59147995FEF16343 /* TamorTests.swift */,
 			);
@@ -151,6 +156,7 @@
 		A2D30300AC50B598D9EA06CE /* Rendering */ = {
 			isa = PBXGroup;
 			children = (
+				53B730CFBEDD49460EE2E156 /* GemBackSurface.swift */,
 				3A8E9F3572DF4626338822D1 /* GemRayResources.swift */,
 				BF5445E524BCF5CA54248A47 /* JewelGeometry.swift */,
 				2F6137DD258DC12395116DAD /* JewelMetalView.swift */,
@@ -342,6 +348,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E9798320F701A4BCEB9DBBFE /* GemTransmissionTests.swift in Sources */,
 				CAFD468FC3AB6D46B00591C2 /* JewelSceneTests.swift in Sources */,
 				B5CCAED58AF37A57B3C51517 /* TamorTests.swift in Sources */,
 			);
@@ -356,6 +363,7 @@
 				78B5AF4FFDB07E5E7F324FED /* CrackMetrics.swift in Sources */,
 				2A85C0300623CAA31149700A /* CrackNetwork.swift in Sources */,
 				54D40BCEBF1F543FB18CE8C6 /* GameRules.swift in Sources */,
+				588D55937B07199666453819 /* GemBackSurface.swift in Sources */,
 				D0F3870BFF9D4754AA4B5DDC /* GemRayResources.swift in Sources */,
 				BB17D7D343DE42C36A24B9A7 /* GlassBreakGeometry.swift in Sources */,
 				6FA93279374CAC1475D0BC66 /* GlassBreakState.swift in Sources */,

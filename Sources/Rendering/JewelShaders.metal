@@ -3,12 +3,13 @@
 using namespace metal;
 struct JewelVertex { float4 position; float4 normal; };
 struct JewelInstance { float4x4 model; float4 color; float4 material; };
-struct JewelFrame { float4 values; float4 dimensions; };
-struct JewelOut { float4 position [[position]]; float3 normal; float3 world; float3 local; float3 localView;float3 localNormal;float3 axisX;float3 axisY;float3 axisZ; float4 color; float4 material; };
+struct JewelFrame { float4 values; float4 dimensions; float4 scene; };
+struct JewelOut { float4 position [[position]]; float3 normal; float3 world; float3 local; float3 localView;float3 localNormal;float3 axisX;float3 axisY;float3 axisZ; float scale; uint objectID [[flat]]; float4 color; float4 material; };
 vertex JewelOut jewelVertex(uint v [[vertex_id]], uint i [[instance_id]],constant JewelVertex* vertices [[buffer(0)]],constant JewelInstance* instances [[buffer(1)]],constant JewelFrame& frame [[buffer(2)]]) {
     JewelVertex a=vertices[v];JewelInstance b=instances[i];float4 p=b.model*a.position;
     JewelOut o;o.position=float4(p.x,p.y,0.5-p.z*0.20,1);
     o.axisX=normalize(b.model[0].xyz);o.axisY=normalize(b.model[1].xyz);o.axisZ=normalize(b.model[2].xyz);
+    o.scale=length(b.model[0].xyz);o.objectID=i+1;
     o.localView=float3(o.axisX.z,o.axisY.z,o.axisZ.z);o.localNormal=a.normal.xyz;
     o.normal=normalize((b.model*float4(a.normal.xyz,0)).xyz);o.world=p.xyz;o.local=a.position.xyz;o.color=b.color;o.material=b.material;return o;
 }
@@ -16,8 +17,8 @@ vertex JewelOut jewelVertex(uint v [[vertex_id]], uint i [[instance_id]],constan
 struct GemOptics {float ior;float roughness;float3 absorption;float dispersion;};
 GemOptics optics(int kind) {
     if(kind==1)return {1.54,0.12,float3(2.8,2.65,2.5),0.001};
-    if(kind==2)return {1.585,0.065,float3(0.46,0.025,0.20),0.006};
-    if(kind==3)return {1.765,0.055,float3(0.015,0.57,0.30),0.009};
+    if(kind==2)return {1.585,0.065,float3(0.27,0.014,0.14),0.006};
+    if(kind==3)return {1.765,0.055,float3(0.012,0.36,0.18),0.009};
     return {2.417,0.028,float3(0.003,0.002,0.001),0.044};
 }
 float3 studio(float3 d) {
@@ -55,13 +56,48 @@ float4 shadeGem(JewelOut in,constant JewelFrame& frame,float pathMM,float3 insid
     }
     return float4(tone(max(c,float3(0))),1);
 }
-fragment float4 jewelFragment(JewelOut in [[stage_in]],constant JewelFrame& frame [[buffer(0)]]) {
+float3 ringBackdrop(float2 p,constant JewelFrame& frame);
+float3 boardBackdrop(float2 p,constant JewelFrame& frame);
+float3 linearColor(float3 c) {return select(pow((c+0.055)/1.055,float3(2.4)),c/12.92,c<=0.04045);}
+float3 transmittedScene(float3 exitPoint,float3 direction,constant JewelFrame& frame) {
+    if(direction.z>=-0.05 || frame.scene.x>1.5)return studio(direction);
+    float distance=max(0.0,exitPoint.z+1.2)/max(0.15,-direction.z);
+    float2 point=exitPoint.xy+direction.xy*distance;
+    float3 background=frame.scene.x>0.5 ? boardBackdrop(point,frame):ringBackdrop(point,frame);
+    // Refract the actual procedural backdrop. The studio adds bounded incident illumination.
+    return linearColor(background)+studio(direction)*0.12;
+}
+fragment float4 jewelBackFragment(JewelOut in [[stage_in]]) {
+    if(in.normal.z>=-0.0001 || in.material.z<0.001)discard_fragment();
+    // The normal magnitude identifies the object, preventing refraction into another gem's map.
+    return float4(normalize(in.normal)*float(in.objectID),in.position.z);
+}
+fragment float4 jewelFragment(JewelOut in [[stage_in]],constant JewelFrame& frame [[buffer(0)]],texture2d<float> backs [[texture(0)]]) {
+    if(in.material.x>=0.5 || int(in.material.y)==1)return shadeGem(in,frame,0,float3(0));
     GemOptics m=optics(int(in.material.y));
-    float3 refracted=refract(float3(0,0,-1),normalize(in.normal),1.0/m.ior);
-    // Raster fallback: bounded optical path approximation using the same studio and material.
-    float path=3.0+5.0*(1-abs(in.local.z));
-    float3 inside=studio(refracted)+studio(reflect(refracted,normalize(in.normal)))*0.8;
-    return shadeGem(in,frame,path,inside);
+    float3 direction=refract(float3(0,0,-1),normalize(in.normal),1.0/m.ior);
+    constexpr sampler sampleMap(coord::normalized,address::clamp_to_edge,filter::nearest);
+    float2 uv=in.position.xy/frame.dimensions.xy;
+    float4 back=backs.sample(sampleMap,uv);
+    float depth=(0.5-back.w)/0.2;
+    float distance=max(0.0,in.world.z-depth)/max(0.15,-direction.z);
+    // One bounded correction along the refracted ray; the object ID rejects silhouette leakage.
+    float2 offset=direction.xy*distance*float2(0.5,-0.5);
+    float4 shifted=backs.sample(sampleMap,uv+offset);
+    if(abs(length(shifted.xyz)-float(in.objectID))<0.35 && shifted.w>in.position.z)back=shifted;
+    if(abs(length(back.xyz)-float(in.objectID))>=0.35 || back.w<=in.position.z)
+        return shadeGem(in,frame,2.0,studio(direction)*0.12);
+    depth=(0.5-back.w)/0.2;
+    distance=max(0.0,in.world.z-depth)/max(0.15,-direction.z);
+    float pathMM=clamp(distance/max(0.001,in.scale)*5.0,0.02,25.0);
+    float3 normal=normalize(back.xyz),exitDirection=refract(direction,-normal,m.ior);
+    float3 reflected=reflect(direction,normal);
+    float f0=pow((m.ior-1)/(m.ior+1),2.0);
+    float exitF=f0+(1-f0)*pow(1-abs(dot(direction,normal)),5.0);
+    bool tir=length_squared(exitDirection)<0.0001;
+    float3 inside=tir ? studio(reflected)*0.78 :
+        transmittedScene(in.world+direction*distance,exitDirection,frame)*(1-exitF)+studio(reflected)*exitF;
+    return shadeGem(in,frame,pathMM*(tir ? 1.4:1.0),inside);
 }
 fragment float4 jewelRayFragment(JewelOut in [[stage_in]],constant JewelFrame& frame [[buffer(0)]],
     raytracing::primitive_acceleration_structure structure [[buffer(1)]],constant JewelVertex* vertices [[buffer(2)]]) {
@@ -82,7 +118,8 @@ fragment float4 jewelRayFragment(JewelOut in [[stage_in]],constant JewelFrame& f
         origin+=direction*hit.distance;
         if(length_squared(exitDirection)>0.0001) {
             float3 world=in.axisX*exitDirection.x+in.axisY*exitDirection.y+in.axisZ*exitDirection.z;
-            inside=studio(world);break;
+            float3 exitPoint=in.world+(in.axisX*(origin.x-in.local.x)+in.axisY*(origin.y-in.local.y)+in.axisZ*(origin.z-in.local.z))*in.scale;
+            inside=transmittedScene(exitPoint,world,frame);break;
         }
         direction=reflect(direction,normal);origin+=direction*0.002;
     }
@@ -92,8 +129,8 @@ struct JewelBG { float4 position [[position]];float2 uv; };
 vertex JewelBG jewelBackgroundVertex(uint id [[vertex_id]]) {
     float2 p=float2(id==1 ? 3:-1,id==2 ? 3:-1);JewelBG o;o.position=float4(p,0.99,1);o.uv=p;return o;
 }
-fragment float4 jewelBackgroundFragment(JewelBG in [[stage_in]],constant JewelFrame& frame [[buffer(0)]]) {
-    float2 p=in.uv;float r=length(p),aa=3.0/max(frame.dimensions.x,1.0);
+float3 ringBackdrop(float2 p,constant JewelFrame& frame) {
+    float r=length(p),aa=3.0/max(frame.dimensions.x,1.0);
     float3 c=float3(0.025,0.043,0.063);
     float halo=exp(-pow((r-0.66)*5,2))*0.023;
     c+=float3(0.38,0.49,0.55)*halo;
@@ -128,10 +165,10 @@ fragment float4 jewelBackgroundFragment(JewelBG in [[stage_in]],constant JewelFr
         float grid=pow(max(0.0,cos(p.x*32))*max(0.0,cos(p.y*32)),80.0)*0.028;
         c+=grid*smoothstep(1.6,2.2,frame.values.z);
     }
-    return float4(select(pow((c+0.055)/1.055,float3(2.4)),c/12.92,c<=0.04045),1);
+    return c;
 }
-fragment float4 miniBoardBackground(JewelBG in [[stage_in]],constant JewelFrame& frame [[buffer(0)]]) {
-    float2 uv=(in.uv+1)/2;
+float3 boardBackdrop(float2 p,constant JewelFrame& frame) {
+    float2 uv=(p+1)/2;
     float2 cell=(uv-0.05)/0.9*frame.values.y;
     float2 edge=min(fract(cell),1-fract(cell));
     float line=1-smoothstep(0.004,0.018,min(edge.x,edge.y));
@@ -139,9 +176,15 @@ fragment float4 miniBoardBackground(JewelBG in [[stage_in]],constant JewelFrame&
     float3 c=mix(float3(0.045,0.067,0.084),float3(0.075,0.096,0.107),check);
     c+=line*float3(0.045,0.046,0.04);
     if(any(uv<0.05)||any(uv>0.95))c=float3(0.025,0.043,0.063);
-    return float4(select(pow((c+0.055)/1.055,float3(2.4)),c/12.92,c<=0.04045),1);
+    return c;
 }
 
+fragment float4 jewelBackgroundFragment(JewelBG in [[stage_in]],constant JewelFrame& frame [[buffer(0)]]) {
+    return float4(linearColor(ringBackdrop(in.uv,frame)),1);
+}
+fragment float4 miniBoardBackground(JewelBG in [[stage_in]],constant JewelFrame& frame [[buffer(0)]]) {
+    return float4(linearColor(boardBackdrop(in.uv,frame)),1);
+}
 fragment float4 soulTargetFragment(JewelOut in [[stage_in]],constant JewelFrame& frame [[buffer(0)]]) {
     float2 p=in.local.xy;float r=length(p);
     float halo=exp(-r*r*5.5)*0.27;
