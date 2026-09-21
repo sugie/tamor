@@ -1,0 +1,2 @@
+# Archived unified diffs use one space for empty context lines.
+docs/release/claude/*.patch whitespace=-blank-at-eol

@@ -2,28 +2,23 @@ import Foundation
 import simd
 
 enum JewelKind: Int, CaseIterable, Identifiable {
-    case diamond, blackOnyx, emerald, ruby
+    // Never reorder the first four IDs: old saves and shaders depend on them.
+    case diamond, blackOnyx, emerald, ruby, sapphire, obsidian
+    static let worldOne: [Self] = [.diamond,.sapphire,.obsidian,.ruby]
     var id: Int { rawValue }
-    var key: String { ["diamond","blackOnyx","emerald","ruby"][rawValue] }
-    var slot: Int { rawValue*3 }
-    var game: JewelGame { self == .diamond ? .grassBreak : self == .ruby ? .grassTrace : .kurukuru }
-    var composition: String { ["C","SiO₂","Be₃Al₂Si₆O₁₈","Al₂O₃"][rawValue] }
-    var name: String { ["ダイヤモンド", "ブラックオニキス", "エメラルド", "ルビー"][rawValue] }
-    var subtitle: String { ["静けさの中に、すべての光。", "深い闇が、光を際立たせる。", "やわらかな光を、ひとつ。", "小さな宇宙に、赤い鼓動。"][rawValue] }
-    var english: String { ["DIAMOND", "BLACK ONYX", "EMERALD", "RUBY"][rawValue] }
+    var key: String { ["diamond","blackOnyx","emerald","ruby","sapphire","obsidian"][rawValue] }
+    var slot: Int { [0,3,6,9,3,6][rawValue] }
+    var game: JewelGame { self == .diamond ? .grassBreak : self == .ruby ? .grassTrace : self == .obsidian ? .crusher : .kurukuru }
+    var composition: String { ["C","SiO₂","Be₃Al₂Si₆O₁₈","Al₂O₃","Al₂O₃","火山ガラス"][rawValue] }
+    var name: String { ["ダイヤモンド","ブラックオニキス","エメラルド","ルビー","サファイア","黒曜石"][rawValue] }
+    var subtitle: String { "光を集めて、次の深度へ。" }
+    var english: String { ["DIAMOND","BLACK ONYX","EMERALD","RUBY","SAPPHIRE","OBSIDIAN"][rawValue] }
     var tint: SIMD3<Float> {
-        [SIMD3<Float>(0.64,0.84,0.97), SIMD3<Float>(0.20,0.19,0.32),
-         SIMD3<Float>(0.35,0.85,0.72), SIMD3<Float>(0.88,0.15,0.29)][rawValue]
+        [SIMD3<Float>(0.64,0.84,0.97), .init(0.20,0.19,0.32), .init(0.35,0.85,0.72),
+         .init(0.88,0.15,0.29), .init(0.18,0.42,0.97), .init(0.16,0.19,0.23)][rawValue]
     }
-    var structureNote: String {
-        switch self {
-        case .diamond: return "炭素のダイヤモンド型格子。原子の大きさ・色は模式表現です。"
-        case .ruby: return "Al₂O₃ · コランダム。結晶構造を準備中です。"
-        case .blackOnyx: return "SiO₂ · カルセドニー（玉髄）。結晶構造を準備中です。"
-        case .emerald: return "Be₃Al₂Si₆O₁₈ · ベリル。結晶構造を準備中です。"
-        }
-    }
-    var hasKurukuru: Bool { self == .blackOnyx || self == .emerald }
+    var structureNote: String { composition }
+    var hasKurukuru: Bool { game == .kurukuru }
 }
 
 enum ObservationLevel: Int, CaseIterable, Identifiable {

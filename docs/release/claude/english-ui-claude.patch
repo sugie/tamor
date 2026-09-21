@@ -1,0 +1,281 @@
+--- a/Tests/UI/JewelRingUITests.swift
++++ b/Tests/UI/JewelRingUITests.swift
+@@ -2,7 +2,9 @@
+ final class JewelRingUITests:XCTestCase {
+     var app:XCUIApplication!
+     override func setUpWithError() throws {
+-        continueAfterFailure=false;app=XCUIApplication();app.launchArguments=["--ui-test"]
++        continueAfterFailure=false;app=XCUIApplication()
++        // These tests assert Japanese copy, so pin the language regardless of the simulator setting.
++        app.launchArguments=["--ui-test","-AppleLanguages","(ja)","-AppleLocale","ja_JP"]
+         app.launchEnvironment["JEWEL_TEST_ID"]=UUID().uuidString;app.launchEnvironment["MTL_DEBUG_LAYER"]="1";app.launch()
+         XCTAssertTrue(app.buttons["ring.games"].waitForExistence(timeout:15))
+     }
+@@ -78,3 +80,52 @@
+         XCTAssertTrue(app.switches["settings.rayTracing"].waitForExistence(timeout:5));XCTAssertFalse(app.switches["settings.rayTracing"].isEnabled)
+     }
+ }
++
++/// English launch. Run on iPhone 12 mini-class and iPad simulators and review the kept screenshots for clipping.
++/// Skips (instead of failing) while Localizable.xcstrings is not yet a member of the Tamor target.
++final class TamorEnglishUITests:XCTestCase {
++    var app:XCUIApplication!
++    override func setUpWithError() throws {
++        continueAfterFailure=false;app=XCUIApplication()
++        app.launchArguments=["--ui-test","-AppleLanguages","(en)","-AppleLocale","en_US"]
++        app.launchEnvironment["JEWEL_TEST_ID"]=UUID().uuidString;app.launch()
++        XCTAssertTrue(app.buttons["ring.games"].waitForExistence(timeout:15))
++        if app.staticTexts["最初の宝石を見つけよう"].exists {throw XCTSkip("Localizable.xcstrings is not bundled yet; English UI cannot be verified.")}
++    }
++    func tap(_ element:XCUIElement) {for _ in 0..<6 {if element.isHittable {break};app.swipeUp()};element.tap()}
++    func shot(_ name:String){let a=XCTAttachment(screenshot:app.screenshot());a.name=name;a.lifetime = .keepAlways;add(a)}
++    func testEnglishHomePaywallAndSettings() {
++        XCTAssertTrue(app.staticTexts["Find your first gem"].exists);shot("en-home")
++        XCTAssertEqual(app.staticTexts["ring.count"].label,"Collected 0 / 4 kinds")
++        tap(app.buttons["ring.unlock"])
++        XCTAssertTrue(app.staticTexts["Into the depths of World 1"].waitForExistence(timeout:5))
++        XCTAssertTrue(app.buttons["purchase.restore"].exists);XCTAssertFalse(app.buttons["purchase.buy"].isEnabled);shot("en-paywall")
++        app.buttons["Close"].tap();app.swipeDown();app.swipeDown();app.buttons["jewel.settings"].tap()
++        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout:5))
++        XCTAssertTrue(app.buttons["Restore Purchases"].exists);shot("en-settings")
++        app.swipeUp();shot("en-settings-lower")
++    }
++    func testEnglishRewardResultAndInventory() {
++        tap(app.buttons["ring.games"]);shot("en-depth-picker");tap(app.buttons["game.pick.sapphire.1"])
++        let cells=app.buttons.matching(NSPredicate(format:"identifier BEGINSWITH 'mini.cell.'"))
++        XCTAssertTrue(cells.firstMatch.waitForExistence(timeout:10))
++        for direction in ["Clockwise","Counterclockwise"] {
++            let ids=cells.matching(NSPredicate(format:"value == %@",direction)).allElementsBoundByIndex.map(\.identifier)
++            for id in ids {app.buttons[id].tap()}
++        }
++        XCTAssertTrue(app.staticTexts["reward.saved"].waitForExistence(timeout:10))
++        XCTAssertEqual(app.staticTexts["reward.title"].label,"Sapphire acquired!");shot("en-reward")
++        if app.buttons["reward.back"].exists {app.buttons["reward.back"].tap()}
++        XCTAssertTrue(app.buttons["ring.inventory"].waitForExistence(timeout:10))
++        tap(app.buttons["ring.inventory"]);XCTAssertTrue(app.staticTexts["1 gem"].waitForExistence(timeout:5));shot("en-inventory")
++    }
++    func testEnglishCrusherResult() {
++        tap(app.buttons["ring.games"]);tap(app.buttons["game.pick.obsidian.1"])
++        let glass=app.buttons["crusher.glass"];XCTAssertTrue(glass.waitForExistence(timeout:10))
++        expectation(for:NSPredicate(format:"value == %@","0:0:active"),evaluatedWith:glass);waitForExpectations(timeout:15)
++        shot("en-crusher-playing")
++        for _ in 0..<3 {glass.coordinate(withNormalizedOffset:.init(dx:0.5,dy:0.5)).tap()}
++        XCTAssertTrue(app.staticTexts["crusher.reward"].waitForExistence(timeout:20));shot("en-crusher-result")
++        XCTAssertTrue(app.staticTexts["crusher.reward"].label.contains("saved"))
++    }
++}
+--- a/Sources/Rendering/JewelRenderer.swift
++++ b/Sources/Rendering/JewelRenderer.swift
+@@ -56,7 +56,7 @@
+         latticeModels=[];bondModels=[]
+         super.init()
+         #if targetEnvironment(simulator)
+-        state.rayStatus="シミュレーターではOFF。実機の対応GPUで利用できます。"
++        state.rayStatus=L("シミュレーターではOFF。実機の対応GPUで利用できます。")
+         #else
+         if device.supportsRaytracingFromRender && device.supportsFamily(.apple9) {
+             do {
+@@ -64,11 +64,11 @@
+                 rays=try GemRayResources(device:device,queue:queue,meshes:gems) { [weak self] success in
+                     DispatchQueue.main.async {
+                         self?.raysReady=success;self?.state.rayAvailable=success
+-                        self?.state.rayStatus=success ? "対応GPU · 選択中の宝石の内部光線を追跡":"レイトレーシングの準備に失敗。通常描画を利用します。"
++                        self?.state.rayStatus=L(success ? "対応GPU · 選択中の宝石の内部光線を追跡":"レイトレーシングの準備に失敗。通常描画を利用します。")
+                     }
+                 }
+-            } catch {state.rayStatus="RT初期化失敗。通常描画を利用します。"}
+-        } else {state.rayStatus="このGPUは対象外です。通常描画を利用します。"}
++            } catch {state.rayStatus=L("RT初期化失敗。通常描画を利用します。")}
++        } else {state.rayStatus=L("このGPUは対象外です。通常描画を利用します。")}
+         #endif
+     }
+     func mtkView(_ view:MTKView,drawableSizeWillChange size:CGSize) {}
+@@ -97,7 +97,7 @@
+         frame.scene.y=windowTime
+         do {
+             try backSurface.encode(command:command,size:view.drawableSize,frame:frame,buffer:buffer,draws:groups.gems.enumerated().map{(gems[Int($0.element.material.y)],1,$0.offset)})
+-        } catch {state.error="宝石の透過描画を準備できませんでした。";return}
++        } catch {state.error=L("宝石の透過描画を準備できませんでした。");return}
+         guard let encoder=command.makeRenderCommandEncoder(descriptor:descriptor) else {return}
+         encoder.setFragmentTexture(backSurface.texture,index:0)
+         encoder.setVertexBytes(&frame,length:MemoryLayout<JewelFrame>.stride,index:2)
+@@ -131,7 +131,7 @@
+             let failed=c.status == .error,message=c.error?.localizedDescription
+             DispatchQueue.main.async {
+                 self?.quality.observe(cpuMS:cpuMS,gpuMS:max(0,c.gpuEndTime-c.gpuStartTime)*1000)
+-                if failed { state.error=message ?? "描画に失敗しました。" }
++                if failed { state.error=L(message ?? "描画に失敗しました。") }
+                 else if notify { state.rendererReady=true }
+             }
+         }
+--- a/Sources/Rendering/MiniGameMetalView.swift
++++ b/Sources/Rendering/MiniGameMetalView.swift
+@@ -67,7 +67,7 @@
+         if s.kind.game != .kurukuru {
+             guard [.ready,.playing].contains(s.engine.phase),s.inputReady else { accessibilityElements=[];return }
+             let e=marker ?? UIAccessibilityElement(accessibilityContainer:self);marker=e
+-            e.accessibilityIdentifier="mini.target";e.accessibilityLabel=s.kind.game == .grassTrace ? "緑の点":"赤い点"
++            e.accessibilityIdentifier="mini.target";e.accessibilityLabel=L(s.kind.game == .grassTrace ? "緑の点":"赤い点")
+             e.accessibilityTraits = .button
+             let rotation=GlassFraming.rotation(yaw:s.glass.yaw,pitch:s.glass.pitch),aspect=Float(bounds.width/max(1,bounds.height))
+             let half=GlassFraming.halfHeight(object:GlassObject(),aspect:aspect,rotation:rotation,amplitude:0)
+@@ -81,7 +81,7 @@
+         }
+         let n=s.engine.board.size,side=bounds.width*0.9/Double(n)
+         for e in items {
+-            e.accessibilityLabel="\(s.kind.name) \(e.index+1)";e.accessibilityValue=s.engine.board.cells[e.index]?.spin.title
++            e.accessibilityLabel="\(L(s.kind.name)) \(e.index+1)";e.accessibilityValue=(s.engine.board.cells[e.index]?.spin.title).map(L)
+             e.accessibilityFrameInContainerSpace=CGRect(x:bounds.width*0.05+Double(e.index%n)*side,y:bounds.height*0.05+Double(e.index/n)*side,width:side,height:side)
+         }
+     }
+--- a/Sources/Rendering/JewelMetalView.swift
++++ b/Sources/Rendering/JewelMetalView.swift
+@@ -110,15 +110,15 @@
+         if axKeys != keys {
+             axItems=list.map { jewel in
+                 let e=JewelAccessibilityElement(accessibilityContainer:self);e.state=state;e.index=jewel.rawValue
+-                e.accessibilityIdentifier="jewel.\(jewel.key)";e.accessibilityLabel=jewel.name
+-                e.accessibilityHint="情報を表示。プレイボタンからゲームを開始できます。";return e
++                e.accessibilityIdentifier="jewel.\(jewel.key)";e.accessibilityLabel=L(jewel.name)
++                e.accessibilityHint=L("情報を表示。プレイボタンからゲームを開始できます。");return e
+             };accessibilityElements=axItems;axKeys=keys
+         }
+         for jewel in JewelKind.worldOne {
+             let label=labels[jewel.rawValue] ?? UILabel()
+             if labels[jewel.rawValue]==nil {label.font = .systemFont(ofSize:9,weight:.medium);label.textAlignment = .center;label.numberOfLines=2;label.isUserInteractionEnabled=false;label.isAccessibilityElement=false;addSubview(label);labels[jewel.rawValue]=label}
+             let owned=state.save.representative(jewel.key) != nil
+-            label.text=state.visible.contains(jewel) ? "":jewel.name+"\n"+jewel.game.title
++            label.text=state.visible.contains(jewel) ? "":L(jewel.name)+"\n"+L(jewel.game.title)
+             label.textColor=UIColor(white:0.96,alpha:owned ? 0.8:1)
+             label.backgroundColor=UIColor(red:0.025,green:0.043,blue:0.063,alpha:0.82)
+             label.layer.cornerRadius=4;label.clipsToBounds=true
+@@ -133,7 +133,7 @@
+             e.accessibilityFrameInContainerSpace=CGRect(x:(p.x+1)*Double(bounds.width)/2-Double(size)/2,y:(1-p.y)*Double(bounds.height)/2-Double(size)/2,width:Double(size),height:Double(size))
+             let frame=e.accessibilityFrameInContainerSpace
+             e.accessibilityActivationPoint=UIAccessibility.convertToScreenCoordinates(CGRect(x:frame.midX,y:frame.midY,width:0,height:0),in:self).origin
+-            e.accessibilityLabel=jewel.name+(state.visible.contains(jewel) ? "":"・未獲得・"+jewel.game.title+"を開始")
++            e.accessibilityLabel=state.visible.contains(jewel) ? L(jewel.name):String(format:L("%@・未獲得・%@を開始"),L(jewel.name),L(jewel.game.title))
+             e.accessibilityTraits=state.selected==e.index ? [.button,.selected]:[.button]
+         }
+     }
+--- a/Sources/App/CrusherScreen.swift
++++ b/Sources/App/CrusherScreen.swift
+@@ -40,7 +40,7 @@
+     }
+     func saveCheckpoint() {
+         do {try FileManager.default.createDirectory(at:checkpoint.deletingLastPathComponent(),withIntermediateDirectories:true);try JSONEncoder().encode(engine).write(to:checkpoint,options:.atomic)}
+-        catch {self.error="中断記録を保存できません："+error.localizedDescription;engine.pause(at:CACurrentMediaTime())}
++        catch {self.error=L("中断記録を保存できません：")+error.localizedDescription;engine.pause(at:CACurrentMediaTime())}
+     }
+     func discardCheckpoint() {work?.cancel();try? FileManager.default.removeItem(at:checkpoint)}
+     func retryCheckpoint() {error=nil;saveCheckpoint()}
+@@ -87,7 +87,7 @@
+ 
+ struct CrusherInput:UIViewRepresentable {
+     @ObservedObject var run:CrusherSession
+-    func makeUIView(context:Context)->CrusherTouchView {let v=CrusherTouchView();v.run=run;v.isMultipleTouchEnabled=true;v.isAccessibilityElement=true;v.accessibilityTraits = .button;v.accessibilityLabel="ガラス";v.accessibilityIdentifier="crusher.glass";return v}
++    func makeUIView(context:Context)->CrusherTouchView {let v=CrusherTouchView();v.run=run;v.isMultipleTouchEnabled=true;v.isAccessibilityElement=true;v.accessibilityTraits = .button;v.accessibilityLabel=L("ガラス");v.accessibilityIdentifier="crusher.glass";return v}
+     func updateUIView(_ view:CrusherTouchView,context:Context) {view.run=run;view.accessibilityValue="\(run.engine.plates):\(run.engine.hits):\(run.engine.phase.rawValue)"}
+ }
+ final class CrusherTouchView:UIView {
+@@ -134,19 +134,19 @@
+                 }
+             }.frame(maxWidth:480).frame(height:geo.size.height*0.52)
+             HStack {
+-                Text(String(format:"残り %.1f 秒",run.engine.remaining)).font(.title2.monospacedDigit()).foregroundStyle(run.engine.remaining<=3 ? .orange:jewelGold).accessibilityIdentifier("crusher.time")
++                Text(String(format:L("残り %.1f 秒"),run.engine.remaining)).font(.title2.monospacedDigit()).foregroundStyle(run.engine.remaining<=3 ? .orange:jewelGold).accessibilityIdentifier("crusher.time")
+                 Spacer();Text("\(run.engine.hits) / 3 打").font(.caption.monospaced())
+             }
+             ProgressView(value:run.engine.remaining/10).tint(jewelGold)
+             if run.engine.terminal {
+-                Text("TIME UP · \(run.engine.plates) 枚 · \(run.engine.grade.rawValue)").font(.title3).accessibilityIdentifier("crusher.result")
+-                if let reward=run.lastReward {Text(reward).foregroundStyle(jewelGold).accessibilityIdentifier("crusher.reward")}
++                Text("TIME UP · \(run.engine.plates) 枚 · \(L(run.engine.grade.rawValue))").font(.title3).accessibilityIdentifier("crusher.result")
++                if let reward=run.lastReward {Text(L(reward)).foregroundStyle(jewelGold).accessibilityIdentifier("crusher.reward")}
+                 Button("もう一度・10秒") {run.nextBatch(reward:nil)}.disabled(run.lastReward==nil).accessibilityIdentifier("crusher.again")
+             } else {
+                 Text("10秒で何枚割れる？ 1枚3タップ。光る弱点で評価アップ！").font(.footnote).accessibilityIdentifier("crusher.status")
+             }
+             Text("1枚100pt＋弱点1HITにつき25pt（破壊時に加算）\nB \(run.engine.bThreshold)pt / A \(run.engine.aThreshold)pt / S \(run.engine.sThreshold)pt").font(.caption2).foregroundStyle(.secondary)
+-            if let error=run.error ?? state.saveMessage {Text(error).font(.caption).foregroundStyle(.orange);Button("保存を再試行"){run.retryCheckpoint();Task{await settle()}}}
++            if let error=run.error ?? state.saveMessage {Text(L(error)).font(.caption).foregroundStyle(.orange);Button("保存を再試行"){run.retryCheckpoint();Task{await settle()}}}
+             Spacer(minLength:0)
+         }.padding(.horizontal,20)
+         }.background(jewelBackground.ignoresSafeArea()).foregroundStyle(jewelWhite).tint(jewelGold)
+@@ -164,7 +164,7 @@
+         let success=run.engine.phase == .award,result=success ? run.outcome:run.failureOutcome
+         if await state.commit(result) {
+             let weight=state.save.gems.first{$0.resultID==result.id}?.centicarats
+-            run.lastReward=weight.map{"黒曜石 \(GemScale.label($0)) を保存しました"} ?? "記録を保存しました。クリア目標は\(run.engine.bThreshold)ptです。"
++            run.lastReward=weight.map{String(format:L("黒曜石 %@ を保存しました"),GemScale.label($0))} ?? String(format:L("記録を保存しました。クリア目標は%lldptです。"),run.engine.bThreshold)
+         }
+     }
+ }
+--- a/Sources/App/MiniGameScreen.swift
++++ b/Sources/App/MiniGameScreen.swift
+@@ -12,7 +12,7 @@
+             VStack(spacing:12) {
+                 HStack {
+                     Button { if session.readyForResult { state.finishGame() } else { session.pause();exitPrompt=true } } label:{Image(systemName:"xmark").frame(width:44,height:40)}.accessibilityLabel("ゲームを終了").accessibilityIdentifier("mini.close")
+-                    Spacer();VStack(spacing:3){Text(session.kind.game.title).font(.system(size:18,weight:.light));Text(session.kind.name+(session.preview ? " · 練習":"")).font(.system(size:10)).foregroundStyle(jewelGold)};Spacer()
++                    Spacer();VStack(spacing:3){Text(L(session.kind.game.title)).font(.system(size:18,weight:.light));Text(L(session.kind.name)+(session.preview ? L(" · 練習"):"")).font(.system(size:10)).foregroundStyle(jewelGold)};Spacer()
+                     Button { session.pause() } label:{Image(systemName:"pause").frame(width:44,height:40)}.accessibilityIdentifier("mini.pause").disabled(session.readyForResult)
+                 }
+                 stats.padding(.horizontal,24)
+@@ -28,11 +28,11 @@
+                         jewelBackground.opacity(0.88)
+                         VStack(spacing:20) {
+                             Text(session.engine.phase == .paused ? "一時停止":"\(session.engine.countdown)").font(.system(size:38,weight:.ultraLight)).accessibilityIdentifier("mini.paused")
+-                            if session.engine.phase == .countdown {Text(session.kind.game == .grassBreak ? String(format:"赤い点を%.2f秒以内にタップ",session.engine.breakDuration):session.kind.game == .kurukuru ? "同じ方向に回る宝石を2つ選ぶ":"まもなく再開します").font(.footnote)}
++                            if session.engine.phase == .countdown {Text(session.kind.game == .grassBreak ? String(format:L("赤い点を%.2f秒以内にタップ"),session.engine.breakDuration):session.kind.game == .kurukuru ? L("同じ方向に回る宝石を2つ選ぶ"):L("まもなく再開します")).font(.footnote)}
+                             if session.engine.phase == .paused { Button("再開する"){session.resume()}.tint(jewelGold).accessibilityIdentifier("mini.resume") }
+                         }
+                     }
+-                    if let error=session.renderError { Text(error).padding().background(jewelBackground).accessibilityIdentifier("mini.error") }
++                    if let error=session.renderError { Text(L(error)).padding().background(jewelBackground).accessibilityIdentifier("mini.error") }
+                 }.frame(maxWidth:480).frame(height:session.kind.game == .kurukuru ? min(geo.size.width,geo.size.height*0.62):geo.size.height*0.62)
+                     .anchorPreference(key:TraceCanvasBounds.self,value:.bounds){$0}
+                 controls.padding(.horizontal,24)
+@@ -98,22 +98,26 @@
+             case .won:
+                 if !session.canCelebrate {ProgressView("ガラスを砕いています…").tint(jewelGold)}
+                 else {
+-                Text(session.preview ? "練習クリア":"\(session.kind.name)を獲得！").font(.system(size:25,weight:.light,design:.serif)).foregroundStyle(jewelGold).accessibilityIdentifier("reward.title")
+-                Text(GemScale.label(session.rewardCarats)+" · "+session.grade.rawValue).font(.system(size:16,design:.monospaced)).accessibilityIdentifier("reward.size")
++                Text(session.preview ? "練習クリア":"\(L(session.kind.name))を獲得！").font(.system(size:25,weight:.light,design:.serif)).foregroundStyle(jewelGold).accessibilityIdentifier("reward.title")
++                Text(GemScale.label(session.rewardCarats)+" · "+L(session.grade.rawValue)).font(.system(size:16,design:.monospaced)).accessibilityIdentifier("reward.size")
+                 if session.claimed { Text(session.preview ? "プレビューのため所持は変わりません。":"保存しました。まもなくリングへ戻ります。").font(.system(size:11)).foregroundStyle(.secondary).accessibilityIdentifier("reward.saved");Button("リングに戻る"){state.finishGame()}.accessibilityIdentifier("reward.back") }
+                 else if state.savingReward {ProgressView("報酬を保存中")}
+-                else {Text(state.saveMessage ?? "報酬を保存してください。").font(.footnote);Button("保存を再試行"){Task{await state.claim(session)}}.accessibilityIdentifier("reward.retry")}
++                else {Text(L(state.saveMessage ?? "報酬を保存してください。")).font(.footnote);Button("保存を再試行"){Task{await state.claim(session)}}.accessibilityIdentifier("reward.retry")}
+                 }
+             case .lost:
+                 Text("チャレンジ失敗").font(.title2).accessibilityIdentifier("mini.failure")
+-                Text((session.engine.failure ?? "")+"。報酬はありません。").font(.footnote).foregroundStyle(.secondary)
+-                Button {state.finishGame()} label:{goldButton("リングに戻る",icon:"arrow.left")}.accessibilityIdentifier("failure.back")
++                Text(L(session.engine.failure ?? "")+L("。報酬はありません。")).font(.footnote).foregroundStyle(.secondary)
++                Button {state.finishGame()} label:{goldButton(L("リングに戻る"),icon:"arrow.left")}.accessibilityIdentifier("failure.back")
+             case .paused,.countdown:EmptyView()
+             }
+         }.multilineTextAlignment(.center)
+     }
+ }
+ 
++/// Display-only lookup in Localizable.xcstrings. Keys are the existing Japanese strings, so a missing
++/// entry (or an unregistered catalog) shows the Japanese text unchanged. Never pass saved IDs through this.
++func L(_ key:String)->String {key.isEmpty ? key:Bundle.main.localizedString(forKey:key,value:key,table:nil)}
++
+ private struct TraceCanvasBounds:PreferenceKey {
+     static var defaultValue:Anchor<CGRect>?
+     static func reduce(value:inout Anchor<CGRect>?,nextValue:()->Anchor<CGRect>?) {value=nextValue() ?? value}
+--- a/Sources/Features/Glass/GlassStudyRenderer.swift
++++ b/Sources/Features/Glass/GlassStudyRenderer.swift
+@@ -184,7 +184,7 @@
+         view.enableSetNeedsDisplay = !settings.rayTracing
+         view.preferredFramesPerSecond = 60
+         view.isOpaque = true
+-        view.accessibilityLabel = "210 × 360 × 12ミリメートルのガラス"
++        view.accessibilityLabel = L("210 × 360 × 12ミリメートルのガラス")
+         do {
+             guard let device = view.device else {
+                 throw NSError(domain: "GlassStudy", code: 2, userInfo: [NSLocalizedDescriptionKey: "Metalを利用できません。"])

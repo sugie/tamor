@@ -16,6 +16,8 @@ vertex JewelOut jewelVertex(uint v [[vertex_id]], uint i [[instance_id]],constan
 // Approximate visible-spectrum material constants; mm-scale attenuation, independent of camera zoom.
 struct GemOptics {float ior;float roughness;float3 absorption;float dispersion;};
 GemOptics optics(int kind) {
+    if(kind==4)return {1.765,0.055,float3(0.32,0.12,0.008),0.009};
+    if(kind==5)return {1.50,0.075,float3(2.8,2.6,2.3),0.002};
     if(kind==1)return {1.54,0.12,float3(2.8,2.65,2.5),0.001};
     if(kind==2)return {1.585,0.065,float3(0.27,0.014,0.14),0.006};
     if(kind==3)return {1.765,0.055,float3(0.012,0.36,0.18),0.009};

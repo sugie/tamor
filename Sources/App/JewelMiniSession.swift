@@ -6,6 +6,15 @@ import simd
     let id=UUID()
     let kind:JewelKind
     let preview:Bool
+    let depth:Int
+    @Published var rewardCarats=10
+    private var resultDate:Date?
+    var grade:GemGrade {DepthRules(depth).grade(game:kind.game,seconds:engine.elapsed,mistakes:engine.mistakes,cracks:engine.cracks.count,won:engine.phase == .won)}
+    var outcome:DepthOutcome {
+        if resultDate==nil {resultDate=Date()}
+        return .init(id:id.uuidString,gemID:kind.key,depth:depth,grade:grade,seconds:engine.elapsed,date:resultDate!,rulesVersion:4)
+    }
+
     let requestedTolerance:Double
     var qualityPolicy=RenderQualityPolicy()
     private(set) var stopped=false
@@ -37,13 +46,16 @@ import simd
     private var geometryTask:Task<Void,Never>?
     private var fractureRequested=false
     private var finishedAt:Double?
-    var rewardSize:Double { kind.game == .kurukuru ? 1+Double(engine.board.size-4)*0.1:1 }
+    var rewardSize:Double {Double(rewardCarats)/100}
     var celebration:Double { guard let finishedAt else { return 0 };return min(1,max(0,(now()-finishedAt)/1.2)) }
     var readyForResult:Bool { engine.phase == .won || engine.phase == .lost }
-    init(kind:JewelKind,size:Int,preview:Bool,tolerance:Double,quality:QualityPreference = .automatic,now:@escaping()->Double={CACurrentMediaTime()},seed:UInt64=UInt64.random(in:1...UInt64.max)) {
-        self.kind=kind;self.preview=preview;self.now=now;requestedTolerance=tolerance
+    init(kind:JewelKind,size:Int,preview:Bool,tolerance:Double,quality:QualityPreference = .automatic,depth:Int=1,now:@escaping()->Double={CACurrentMediaTime()},seed:UInt64=UInt64.random(in:1...UInt64.max)) {
+        self.kind=kind;self.preview=preview;self.depth=depth;self.now=now;requestedTolerance=tolerance
         qualityPolicy.preference=quality
         engine=MiniGameEngine(type:kind.game,size:size,seed:seed,tolerance:tolerance,now:now())
+        engine.breakDuration=DepthRules(depth).breakDuration
+        engine.requiredHits=DepthRules(depth).breakHits
+        engine.traceDuration=DepthRules(depth).traceDuration
         glass.renderPixelLimit=tier.glassPixels
         glass.amplitude=0;glass.yaw = -0.08;glass.pitch=0.04;glass.rayTracing=false;glass.pattern=0
     }

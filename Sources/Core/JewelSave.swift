@@ -1,7 +1,7 @@
 import Foundation
 
-enum JewelGame: String, Codable { case kurukuru, grassTrace, grassBreak
-    var title:String { self == .kurukuru ? "クルクルワールド" : self == .grassTrace ? "Glass Trace" : "Glass Break" }
+enum JewelGame: String, Codable { case kurukuru, grassTrace, grassBreak, crusher
+    var title:String { self == .kurukuru ? "クルクルワールド" : self == .grassTrace ? "Glass Trace" : self == .crusher ? "Crusher Room" : "Glass Break" }
 }
 struct JewelHolding: Codable, Equatable {
     var size:Double
@@ -16,7 +16,9 @@ struct JewelReward: Codable, Equatable, Identifiable {
     let acquiredAt:Date
 }
 struct JewelSave: Codable, Equatable {
-    var schemaVersion=2
+    var schemaVersion=3
+    var specimens:[GemInstance]?=[]
+    var depthOutcomes:[DepthOutcome]?=[]
     var decorationStyle:Int?=1
     var journal:[GameResultEvent]?=[]
     var earnedTitles:[String]?=[]
@@ -24,31 +26,36 @@ struct JewelSave: Codable, Equatable {
     var revision=0
     var rotation:Double=0
     var selectedID:String?
-    var slots:[String:Int]=["diamond":0,"blackOnyx":3,"emerald":6,"ruby":9]
+    var slots:[String:Int]=["diamond":0,"sapphire":3,"obsidian":6,"ruby":9]
     var inventory:[String:JewelHolding]=[:]
     var progress:[String:Int]=[:]
     var rewards:[JewelReward]=[]
     var bestTimes:[String:Double]=[:]
     mutating func validate() throws {
-        guard [1,2].contains(schemaVersion),revision>=0,rotation.isFinite,
+        guard [1,2,3].contains(schemaVersion),revision>=0,rotation.isFinite,
               Set(slots.values).count==slots.count,slots.values.allSatisfy({(0..<12).contains($0)}),
               inventory.values.allSatisfy({$0.size.isFinite && $0.size>0}),
               progress.values.allSatisfy({[4,6,8,10,12].contains($0)}),
               bestTimes.values.allSatisfy({$0.isFinite && $0>=0}),
               Set(rewards.map(\.id)).count==rewards.count,
-              rewards.allSatisfy({$0.size.isFinite && $0.size>0 && $0.seconds.isFinite && $0.seconds>=0}) else {
+              rewards.allSatisfy({$0.size.isFinite && $0.size>0 && $0.size<=1.8 && $0.seconds.isFinite && $0.seconds>=0}) else {
             throw SaveFailure.invalid
         }
-        schemaVersion=2
         guard (0...3).contains(decorationStyle ?? 1) else {throw SaveFailure.invalid}
-        let ids=Set(["diamond","blackOnyx","emerald","ruby","blackPhonix"])
+        let ids=Set(["diamond","blackOnyx","emerald","ruby","blackPhonix","sapphire","obsidian"])
         guard Set(inventory.keys).isSubset(of:ids),Set(slots.keys).isSubset(of:ids),
               inventory.values.allSatisfy({$0.size<=1.8}),
               (rulesBestTimes ?? [:]).values.allSatisfy({$0.isFinite && $0>=0}),
               (journal ?? []).allSatisfy({ids.contains($0.gemID) && $0.seconds.isFinite && $0.seconds>=0 && $0.traceTolerance.isFinite && $0.traceTolerance>=0 && $0.verification=="localOnly"}) else {throw SaveFailure.invalid}
+        guard Set(gems.map(\.id)).count==gems.count,
+              Set((journal ?? []).map(\.id)).count==(journal ?? []).count,
+              gems.allSatisfy({ids.contains($0.gemID) && (10...2000).contains($0.centicarats)}),
+              Set(outcomes.map(\.id)).count==outcomes.count,
+              outcomes.allSatisfy({ids.contains($0.gemID) && (1...6).contains($0.depth) && $0.seconds.isFinite && $0.seconds>=0}) else {throw SaveFailure.invalid}
         // Old display-only enum spelling is an alias, not a new possession.
         if slots["blackOnyx"]==nil,let old=slots.removeValue(forKey:"blackPhonix") { slots["blackOnyx"]=old }
         if inventory["blackOnyx"]==nil,let old=inventory.removeValue(forKey:"blackPhonix") { inventory["blackOnyx"]=old }
+        migrateCollection()
     }
     @discardableResult mutating func award(_ reward:JewelReward)->Bool {
         guard !rewards.contains(where:{$0.id==reward.id}) else { return false }
@@ -86,7 +93,7 @@ struct JewelSaveFiles {
         if !fm.fileExists(atPath:primary.path) && !fm.fileExists(atPath:backup.path) { return (.init(),false) }
         if let save=try? decode(primary) { return (save,false) }
         // Never downgrade an unknown future format by replacing it with an older backup.
-        if let bytes=try? Data(contentsOf:primary),let json=try? JSONSerialization.jsonObject(with:bytes) as? [String:Any],let version=json["schemaVersion"] as? Int,![1,2].contains(version) { throw SaveFailure.invalid }
+        if let bytes=try? Data(contentsOf:primary),let json=try? JSONSerialization.jsonObject(with:bytes) as? [String:Any],let version=json["schemaVersion"] as? Int,![1,2,3].contains(version) { throw SaveFailure.invalid }
         if let save=try? decode(backup) { return (save,true) }
         throw SaveFailure.unreadable
     }

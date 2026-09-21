@@ -2,7 +2,7 @@ import Foundation
 import simd
 var checks=0
 func check(_ value:@autoclosure()->Bool,_ message:String) { checks+=1;if !value() { fatalError(message) } }
-check(JewelKind.allCases.count==4,"Four original kinds")
+check(JewelKind.worldOne.count==4,"Four original kinds")
 for count in [4,12] {
     for angle in [-31.7,-1.4,0,0.4,43.9] {
         check(RingLayoutMath.hit(point:.zero,count:count,angle:angle)==nil,"Center must stay empty")

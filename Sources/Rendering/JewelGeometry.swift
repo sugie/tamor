@@ -65,7 +65,7 @@ enum JewelGeometry {
 extension JewelGeometry {
     static func gem(_ kind:JewelKind)->[JewelVertex] {
         if kind == .diamond {return gem()}
-        if kind == .blackOnyx {
+        if kind == .blackOnyx || kind == .obsidian {
             var v:[JewelVertex]=[]
             func point(_ i:Int,_ j:Int)->SIMD3<Float> {
                 let t=Float(i)*Float.pi/24,a=Float(j)*2*Float.pi/48

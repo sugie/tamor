@@ -184,7 +184,7 @@ struct GlassStudyMetalView: UIViewRepresentable {
         view.enableSetNeedsDisplay = !settings.rayTracing
         view.preferredFramesPerSecond = 60
         view.isOpaque = true
-        view.accessibilityLabel = "210 × 360 × 12ミリメートルのガラス"
+        view.accessibilityLabel = L("210 × 360 × 12ミリメートルのガラス")
         do {
             guard let device = view.device else {
                 throw NSError(domain: "GlassStudy", code: 2, userInfo: [NSLocalizedDescriptionKey: "Metalを利用できません。"])

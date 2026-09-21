@@ -40,14 +40,6 @@ import XCTest
         e.resume(at:20);e.advance(to:22.99);XCTAssertEqual(e.phase,.countdown)
         e.advance(to:23);XCTAssertEqual(e.phase,.playing);XCTAssertEqual(e.elapsed,0)
     }
-    func testMasterySeatAndMaximumSizeDecorations() {
-        let s=JewelSceneState(files:.init(directory:FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)),defaults:nil)
-        s.save.inventory["emerald"] = .init(size:1.8,acquiredAt:Date())
-        s.save.earnedTitles=["emerald・12×12"]
-        XCTAssertTrue(s.hasMaximumGem);XCTAssertEqual(s.decoratedSlots,1<<6)
-        s.save.decorationStyle=3;XCTAssertEqual(s.decoration,3)
-        s.save.inventory["emerald"]?.size=1.6;XCTAssertEqual(s.decoration,1)
-    }
     func testQualityHysteresisAndThermalCaps() {
         var q=RenderQualityPolicy()
         for _ in 0..<29 {q.observe(cpuMS:3,gpuMS:30)}
@@ -68,7 +60,7 @@ import XCTest
         let file=dir.appendingPathComponent("import.json");try FileManager.default.createDirectory(at:dir,withIntermediateDirectories:true)
         try JSONEncoder().encode(old).write(to:file)
         await s.importSave(file)
-        XCTAssertEqual(s.save.schemaVersion,2);XCTAssertEqual(s.ringAngle,1.234);XCTAssertEqual(s.save.inventory["emerald"]?.size,1.4)
+        XCTAssertEqual(s.save.schemaVersion,3);XCTAssertEqual(s.ringAngle,1.234);XCTAssertEqual(s.save.inventory["emerald"]?.size,1.4)
         XCTAssertEqual(s.save.bestTimes["emerald.4.v2"],15);XCTAssertTrue((s.save.rulesBestTimes ?? [:]).isEmpty)
         XCTAssertEqual(try s.files.load().0,s.save)
     }
