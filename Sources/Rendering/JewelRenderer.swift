@@ -53,13 +53,10 @@ import simd
             buffers.append(b)
         }
         instanceBuffers=buffers
-        latticeModels=state.lattice.atoms.map { JewelMatrices.translate($0.position)*JewelMatrices.scale(.init(repeating:0.115)) }
-        bondModels=state.lattice.bonds.map {
-            JewelMatrices.bond(from:state.lattice.atoms[$0.first].position,to:state.lattice.atoms[$0.second].position,radius:0.032)
-        }
+        latticeModels=[];bondModels=[]
         super.init()
         #if targetEnvironment(simulator)
-        state.rayStatus="シミュレーターではOFF。実機の対応GPUで利用できます。"
+        state.rayStatus=L("シミュレーターではOFF。実機の対応GPUで利用できます。")
         #else
         if device.supportsRaytracingFromRender && device.supportsFamily(.apple9) {
             do {
@@ -67,11 +64,11 @@ import simd
                 rays=try GemRayResources(device:device,queue:queue,meshes:gems) { [weak self] success in
                     DispatchQueue.main.async {
                         self?.raysReady=success;self?.state.rayAvailable=success
-                        self?.state.rayStatus=success ? "対応GPU · 詳細観察で内部光線を追跡":"レイトレーシングの準備に失敗。通常描画を利用します。"
+                        self?.state.rayStatus=L(success ? "対応GPU · 選択中の宝石の内部光線を追跡":"レイトレーシングの準備に失敗。通常描画を利用します。")
                     }
                 }
-            } catch {state.rayStatus="RT初期化失敗。通常描画を利用します。"}
-        } else {state.rayStatus="このGPUは対象外です。通常描画を利用します。"}
+            } catch {state.rayStatus=L("RT初期化失敗。通常描画を利用します。")}
+        } else {state.rayStatus=L("このGPUは対象外です。通常描画を利用します。")}
         #endif
     }
     func mtkView(_ view:MTKView,drawableSizeWillChange size:CGSize) {}
@@ -100,7 +97,7 @@ import simd
         frame.scene.y=windowTime
         do {
             try backSurface.encode(command:command,size:view.drawableSize,frame:frame,buffer:buffer,draws:groups.gems.enumerated().map{(gems[Int($0.element.material.y)],1,$0.offset)})
-        } catch {state.error="宝石の透過描画を準備できませんでした。";return}
+        } catch {state.error=L("宝石の透過描画を準備できませんでした。");return}
         guard let encoder=command.makeRenderCommandEncoder(descriptor:descriptor) else {return}
         encoder.setFragmentTexture(backSurface.texture,index:0)
         encoder.setVertexBytes(&frame,length:MemoryLayout<JewelFrame>.stride,index:2)
@@ -116,7 +113,7 @@ import simd
         }
         for (index,instance) in groups.gems.enumerated() {
             let kind=Int(instance.material.y)
-            if state.rayTracing,raysReady,tier != .low,state.inspectionProgress>0.99,state.kind.rawValue==kind,state.renderedZoom<1.6,let rayPipeline,let rays {
+            if state.rayTracing,raysReady,tier != .low,state.kind.rawValue==kind,let rayPipeline,let rays {
                 encoder.setRenderPipelineState(rayPipeline)
                 encoder.setFragmentAccelerationStructure(rays.structures[kind],bufferIndex:1)
                 encoder.setFragmentBuffer(gems[kind].buffer,offset:0,index:2)
@@ -134,7 +131,7 @@ import simd
             let failed=c.status == .error,message=c.error?.localizedDescription
             DispatchQueue.main.async {
                 self?.quality.observe(cpuMS:cpuMS,gpuMS:max(0,c.gpuEndTime-c.gpuStartTime)*1000)
-                if failed { state.error=message ?? "描画に失敗しました。" }
+                if failed { state.error=L(message ?? "描画に失敗しました。") }
                 else if notify { state.rendererReady=true }
             }
         }
@@ -142,28 +139,13 @@ import simd
     }
     private func instances() -> (gems:[JewelInstance],atoms:[JewelInstance],bonds:[JewelInstance]) {
         var gems:[JewelInstance]=[],atoms:[JewelInstance]=[],bonds:[JewelInstance]=[]
-        let progress=Float(state.inspectionProgress),zoom=Float(state.renderedZoom)
-        let reveal=state.kind == .diamond ? min(1,max(0,(zoom-1.05)/1.25)):0
-        func instance(_ model:simd_float4x4,_ tint:SIMD3<Float>,_ kind:Float,_ style:Float=0,_ visibility:Float=1,_ clip:Float=0)->JewelInstance {
-            .init(model:model,color:SIMD4(tint,1),material:.init(kind,style,visibility,clip))
-        }
-        let rotation=JewelMatrices.rotate(state.pitch,.init(1,0,0))*JewelMatrices.rotate(state.yaw,.init(0,1,0))
         for jewel in state.visible {
-            let p=state.position(jewel),chosen=jewel == state.kind
-            let blend:Float=chosen ? progress:0
-            let ringSize=Float(0.18*min(1.8,state.save.inventory[jewel.key]?.size ?? 1))
-            let size=ringSize+(0.61+min(zoom,1.6)*0.15-ringSize)*blend
-            let ringRotation=JewelMatrices.rotate(-0.38,.init(1,0,0))*JewelMatrices.rotate(Float(state.reduceMotion ? 0:sin(state.time*0.25)*0.12)+0.18,.init(0,1,0))
-            let orientation=simd_float4x4(simd_slerp(simd_quatf(ringRotation),simd_quatf(rotation),blend))
-            let model=JewelMatrices.translate(.init(Float(p.x)*(1-blend),Float(p.y)*(1-blend),0))*orientation*JewelMatrices.scale(.init(repeating:size))
-            gems.append(instance(model,jewel.tint,0,Float(jewel.rawValue),chosen ? 1:1-progress,chosen ? reveal*progress:0))
-        }
-        if reveal>0.001 && progress>0.001 {
-            let scale:Float=0.13+zoom*0.077
-            let p=state.position(state.kind)
-            let root=JewelMatrices.translate(.init(Float(p.x)*(1-progress),Float(p.y)*(1-progress),0))*rotation*JewelMatrices.scale(.init(repeating:scale))
-            for model in latticeModels { atoms.append(instance(root*model,.init(0.52,0.80,0.88),1,0,min(1,reveal*2)*progress)) }
-            for model in bondModels { bonds.append(instance(root*model,.init(0.38,0.52,0.56),2,0,min(1,reveal*2)*progress)) }
+            let p=state.position(jewel)
+            // Mesh diameter is two model units. NDC diameter two maps to viewport width.
+            let size=Float(GemScale.width(centicarats:state.weight(jewel))/375)
+            let orientation=JewelMatrices.rotate(-0.38,.init(1,0,0))*JewelMatrices.rotate(Float(state.reduceMotion ? 0:sin(state.time*0.25)*0.12)+0.18,.init(0,1,0))
+            let model=JewelMatrices.translate(.init(Float(p.x),Float(p.y),0))*orientation*JewelMatrices.scale(.init(repeating:size))
+            gems.append(.init(model:model,color:SIMD4(jewel.tint,1),material:.init(0,Float(jewel.rawValue),1,0)))
         }
         return (gems,atoms,bonds)
     }

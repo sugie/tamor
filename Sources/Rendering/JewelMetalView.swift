@@ -44,9 +44,9 @@ final class JewelTouchView:MTKView {
         super.init(frame:frame,device:device)
         pan.maximumNumberOfTouches=1
         doubleTap.numberOfTapsRequired=2
-        addGestureRecognizer(tap);addGestureRecognizer(doubleTap);addGestureRecognizer(pan);addGestureRecognizer(pinch)
-        tap.require(toFail:doubleTap);doubleTap.require(toFail:pan);doubleTap.require(toFail:pinch)
-        tap.require(toFail:pan);tap.require(toFail:pinch)
+        addGestureRecognizer(tap);addGestureRecognizer(doubleTap);addGestureRecognizer(pan)
+        tap.require(toFail:doubleTap);doubleTap.require(toFail:pan)
+        tap.require(toFail:pan)
     }
     required init(coder:NSCoder) { fatalError("Programmatic view") }
     override func didMoveToWindow() {
@@ -65,23 +65,17 @@ final class JewelTouchView:MTKView {
         SIMD2(2*Double(p.x/max(1,bounds.width))-1,1-2*Double(p.y/max(1,bounds.height)))
     }
     @objc private func tapped(_ g:UITapGestureRecognizer) {
-        guard let state,!state.paused,!state.inspecting else { return }
+        guard let state,!state.paused else { return }
         if let jewel=state.hit(normalized(g.location(in:self))) { state.activate(jewel.rawValue) }
     }
     @objc private func doubleTapped(_ g:UITapGestureRecognizer) {
         guard let state,!state.paused else { return }
         if state.inspecting { state.startGame(state.kind,previewOnly:state.save.inventory[state.kind.key]==nil);return }
-        if let jewel=state.hit(normalized(g.location(in:self))) { state.startGame(jewel,previewOnly:state.visible.contains(jewel) && state.save.inventory[jewel.key]==nil) }
+        if let jewel=state.hit(normalized(g.location(in:self))) { state.startGame(jewel,previewOnly:state.visible.contains(jewel) && state.save.representative(jewel.key)==nil) }
     }
     @objc private func panned(_ g:UIPanGestureRecognizer) {
         guard let state,!state.paused else { return }
         let point=normalized(g.location(in:self)),now=CACurrentMediaTime()
-        if state.inspecting {
-            if g.state == .began { initialYaw=state.yaw;initialPitch=state.pitch }
-            let t=g.translation(in:self)
-            state.yaw=initialYaw+Float(t.x)*0.009
-            state.pitch=min(1.2,max(-1.2,initialPitch+Float(t.y)*0.009));return
-        }
         switch g.state {
         case .began:
             let t=g.translation(in:self),p=g.location(in:self)
@@ -111,20 +105,20 @@ final class JewelTouchView:MTKView {
     }
     func refreshAccessibility() {
         guard let state else { return }
-        let list=state.inspecting ? []:JewelKind.allCases
+        let list=JewelKind.worldOne
         let keys=list.map(\.key).joined(separator:",")
         if axKeys != keys {
             axItems=list.map { jewel in
                 let e=JewelAccessibilityElement(accessibilityContainer:self);e.state=state;e.index=jewel.rawValue
-                e.accessibilityIdentifier="jewel.\(jewel.key)";e.accessibilityLabel=jewel.name
-                e.accessibilityHint="観察する。ゲームは詳細の開始ボタンからも起動できます。";return e
+                e.accessibilityIdentifier="jewel.\(jewel.key)";e.accessibilityLabel=L(jewel.name)
+                e.accessibilityHint=L("情報を表示。プレイボタンからゲームを開始できます。");return e
             };accessibilityElements=axItems;axKeys=keys
         }
-        for jewel in JewelKind.allCases {
+        for jewel in JewelKind.worldOne {
             let label=labels[jewel.rawValue] ?? UILabel()
             if labels[jewel.rawValue]==nil {label.font = .systemFont(ofSize:9,weight:.medium);label.textAlignment = .center;label.numberOfLines=2;label.isUserInteractionEnabled=false;label.isAccessibilityElement=false;addSubview(label);labels[jewel.rawValue]=label}
-            let owned=state.save.inventory[jewel.key] != nil
-            label.text=state.visible.contains(jewel) ? "":jewel.name+"\n"+jewel.game.title
+            let owned=state.save.representative(jewel.key) != nil
+            label.text=state.visible.contains(jewel) ? "":L(jewel.name)+"\n"+L(jewel.game.title)
             label.textColor=UIColor(white:0.96,alpha:owned ? 0.8:1)
             label.backgroundColor=UIColor(red:0.025,green:0.043,blue:0.063,alpha:0.82)
             label.layer.cornerRadius=4;label.clipsToBounds=true
@@ -135,11 +129,11 @@ final class JewelTouchView:MTKView {
         }
         for e in axItems {
             guard let jewel=JewelKind(rawValue:e.index) else { continue }
-            let p=state.position(jewel),size=max(44,bounds.width*0.22*min(1.8,state.save.inventory[jewel.key]?.size ?? 1))
+            let p=state.position(jewel),size=max(44,GemScale.width(centicarats:state.weight(jewel),viewport:bounds.width))
             e.accessibilityFrameInContainerSpace=CGRect(x:(p.x+1)*Double(bounds.width)/2-Double(size)/2,y:(1-p.y)*Double(bounds.height)/2-Double(size)/2,width:Double(size),height:Double(size))
             let frame=e.accessibilityFrameInContainerSpace
             e.accessibilityActivationPoint=UIAccessibility.convertToScreenCoordinates(CGRect(x:frame.midX,y:frame.midY,width:0,height:0),in:self).origin
-            e.accessibilityLabel=jewel.name+(state.visible.contains(jewel) ? "":"・未獲得・"+jewel.game.title+"を開始")
+            e.accessibilityLabel=state.visible.contains(jewel) ? L(jewel.name):String(format:L("%@・未獲得・%@を開始"),L(jewel.name),L(jewel.game.title))
             e.accessibilityTraits=state.selected==e.index ? [.button,.selected]:[.button]
         }
     }

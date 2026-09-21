@@ -2,6 +2,16 @@ import SwiftUI
 import MetalKit
 import simd
 
+enum GlassTargetProjection {
+    static func point(_ target:SIMD2<Double>,size:CGSize,settings:GlassStudySettings)->CGPoint {
+        let rotation=GlassFraming.rotation(yaw:settings.yaw,pitch:settings.pitch)
+        let aspect=Float(size.width/max(1,size.height))
+        let half=GlassFraming.halfHeight(object:GlassObject(),aspect:aspect,rotation:rotation,amplitude:0)
+        let p=rotation*SIMD3<Float>(Float((target.x-0.5)*210),Float((0.5-target.y)*360),6)
+        return CGPoint(x:Double((p.x/(half*aspect)+1)/2)*size.width,y:Double((1-p.y/half)/2)*size.height)
+    }
+}
+
 struct MiniGameMetalView:UIViewRepresentable {
     @ObservedObject var session:JewelMiniSession
     func makeCoordinator()->MiniGameRenderer? {
@@ -57,7 +67,7 @@ final class MiniTouchView:MTKView {
         if s.kind.game != .kurukuru {
             guard [.ready,.playing].contains(s.engine.phase),s.inputReady else { accessibilityElements=[];return }
             let e=marker ?? UIAccessibilityElement(accessibilityContainer:self);marker=e
-            e.accessibilityIdentifier="mini.target";e.accessibilityLabel=s.kind.game == .grassTrace ? "緑の点":"赤い点"
+            e.accessibilityIdentifier="mini.target";e.accessibilityLabel=L(s.kind.game == .grassTrace ? "緑の点":"赤い点")
             e.accessibilityTraits = .button
             let rotation=GlassFraming.rotation(yaw:s.glass.yaw,pitch:s.glass.pitch),aspect=Float(bounds.width/max(1,bounds.height))
             let half=GlassFraming.halfHeight(object:GlassObject(),aspect:aspect,rotation:rotation,amplitude:0)
@@ -71,7 +81,7 @@ final class MiniTouchView:MTKView {
         }
         let n=s.engine.board.size,side=bounds.width*0.9/Double(n)
         for e in items {
-            e.accessibilityLabel="\(s.kind.name) \(e.index+1)";e.accessibilityValue=s.engine.board.cells[e.index]?.spin.title
+            e.accessibilityLabel="\(L(s.kind.name)) \(e.index+1)";e.accessibilityValue=(s.engine.board.cells[e.index]?.spin.title).map(L)
             e.accessibilityFrameInContainerSpace=CGRect(x:bounds.width*0.05+Double(e.index%n)*side,y:bounds.height*0.05+Double(e.index/n)*side,width:side,height:side)
         }
     }
@@ -154,13 +164,13 @@ final class MiniTouchView:MTKView {
             let radius=max(Float(s.requestedTolerance)*210,Float(22/max(1,v.bounds.width))*half*2*aspect)
             let x=p.x/(half*aspect),y=p.y/half
             let tint:SIMD3<Float>=s.kind.game == .grassTrace ? .init(0.10,1,0.42):.init(1,0.12,0.14)
-            let remaining=Float(s.engine.deadline.map{max(0,min(1,($0-s.engine.activeTime)/1.5))} ?? 1)
+            let remaining=Float(s.engine.deadline.map{max(0,min(1,($0-s.engine.activeTime)/s.engine.breakDuration))} ?? 1)
             marker = .init(model:JewelMatrices.translate(.init(x,y,0.9))*JewelMatrices.scale(.init(radius/(half*aspect)*1.6,radius/half*1.6,1)),color:.init(tint,1),material:.init(3,0,1,remaining))
             // Use the same radius in the logical glass-plane metric.
-            s.engine.tolerance=Double(radius/210)
+            // Logical tolerance is fixed at session creation; visual halos do not change it.
         }
         if s.engine.phase == .won,s.canCelebrate {
-            let t=Float(s.celebration),scale:Float=(0.12+0.36*t)*Float(sqrt(s.rewardSize))
+            let t=Float(s.celebration),scale=Float(GemScale.width(centicarats:s.rewardCarats)/375)
             gems.append(item(.init(0,0,1.0),.init(repeating:scale),s.kind.tint,0,Float(time)*0.5))
             for i in 0..<s.tier.particles {
                 let a=Float(i)*2.39996,r=0.15+t*0.72,p=SIMD3<Float>(cos(a)*r,sin(a)*r,0.7)

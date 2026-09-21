@@ -27,6 +27,8 @@ struct MiniGameEngine {
     var requiredHits:Int
     var hits=0
     var tolerance:Double
+    var breakDuration:Double=1.5
+    var traceDuration:Double=15
     var failure:String?
     var fadeEvents:[(Int,Double)]=[]
     private var random:SeededRNG
@@ -79,20 +81,20 @@ struct MiniGameEngine {
             let end=elapsed
             while traceChecked+1.0/120 <= end+1e-9 && phase == .playing {
                 traceChecked+=1.0/120
-                let distance=pointer.map{Self.distance($0,Self.course(traceChecked))} ?? .infinity
+                let distance=pointer.map{Self.distance($0,Self.course(traceChecked * 15 / traceDuration))} ?? .infinity
                 if distance>tolerance {
                     if episodeSince==nil { episodeSince=traceChecked;nextMiss=traceChecked+0.15 }
                     if let due=nextMiss,traceChecked+1e-9>=due {
-                        addCrack(at:Self.course(traceChecked));nextMiss=due+0.75
+                        addCrack(at:Self.course(traceChecked * 15 / traceDuration));nextMiss=due+0.75
                         if cracks.count>=3 { phase = .lost;failure="ヒビが3つ入りました" }
                     }
                 } else { episodeSince=nil;nextMiss=nil }
-                if traceChecked+1e-9>=15,pointerDown,distance<=tolerance {
+                if traceChecked+1e-9>=traceDuration,pointerDown,distance<=tolerance {
                     if endpointSince==nil {endpointSince=traceChecked}
                     if let since=endpointSince,traceChecked-since+1e-9>=0.3,phase == .playing {elapsed=traceChecked;phase = .won}
                 } else {endpointSince=nil}
             }
-            target=Self.course(elapsed)
+            target=Self.course(elapsed * 15 / traceDuration)
         } else if type == .grassBreak,let deadline,activeTime>=deadline {
             // A small delivery window allows a touch timestamped before the deadline to arrive.
             if pendingTimeout==nil { pendingTimeout=deadline }
@@ -131,7 +133,7 @@ struct MiniGameEngine {
         if type == .grassTrace {
             if phase == .ready,Self.distance(point,target)<=tolerance { begin(at:now) }
             if phase == .playing || phase == .countdown { pointer=point }
-        } else if phase == .playing,beganTouch,!waitingRelease,let deadline,eventTime<deadline,Self.distance(point,target)<=max(0.075,tolerance) {
+        } else if phase == .playing,beganTouch,!waitingRelease,let deadline,eventTime<=deadline,Self.distance(point,target)<=max(0.075,tolerance) {
             hits+=1;addCrack(at:target);waitingRelease=true;pendingTimeout=nil
             if hits==requiredHits { phase = .won } else { newTarget() }
         } else if type == .grassBreak,phase == .playing,beganTouch,deadline != nil {
@@ -140,7 +142,7 @@ struct MiniGameEngine {
     }
     mutating func presented(_ id:Int,at now:Double) {
         guard type == .grassBreak,phase == .playing,targetID==id,deadline==nil else { return }
-        advance(to:now);guard phase == .playing else {return};deadline=activeTime+1.5
+        advance(to:now);guard phase == .playing else {return};deadline=activeTime+breakDuration
     }
     mutating func newTarget() {
         var p=target

@@ -1,52 +1,58 @@
 # Tamor
 
-SwiftUI + Metalのジュエル収集ゲーム。iOS 17以降、iPhone / iPad。Bundle IDは `com.marcottlab.tamor`。
+SwiftUI + Metalのジュエル収集ゲーム。iOS 17以降、iPhone / iPad。Bundle IDは `com.marcottlab.tamor`。回答済み `docs/jewel-decisions-v4.xlsx` を反映し、追加指示でCrusherとRubyを更新し、日英対応・端末保存のみの1.0（ビルド5）へ公開準備中です。
 
 ## 起動
 
-`Tamor.xcodeproj` をXcodeで開き、Scheme **Tamor** とiPhoneシミュレーターを選んで実行します。プロジェクト定義は `project.yml`。ファイル追加後は `xcodegen generate` で再生成できます。外部リポジトリ参照・外部パッケージ・通信設定は不要です。
+`Tamor.xcodeproj` をXcodeで開き、Scheme **Tamor** とiPhoneシミュレーターを選んで実行します。初回はRevenueCat Swift Packageの取得に通信が必要です。`Package.resolved` は5.90.2を記録しています。プロジェクト定義は `project.yml`。追加ファイルがある場合は `xcodegen generate` で再生成します。
 
-初回は所持0個。名前付きの空き台座をタップすると対応ミニゲームが始まります。開発ビルドの「開発用：4つの宝石を比較」で所持を変更せず4種類を観察できます。リングはスワイプ回転、宝石はシングルタップで観察、ダブルタップでゲーム。未所持の開発プレビューから始めたゲームは練習扱いです。
+初回は所持0個。「ミニゲーム・深度を選ぶ」から始めるか、空き台座をタップします。リングはスワイプ回転、宝石はシングルタップで情報、ダブルタップでゲーム。拡大・内部・原子表示は廃止しました。開発ビルドだけに所持を変更しない4種のプレビューがあります。
 
-- ダイヤモンド：Glass Break。ガラス準備後3秒で自動開始。赤い点を各1.5秒以内にタップ。
-- ルビー：Glass Trace。緑の点から開始して15秒追跡、終点で0.3秒保持。ヒビ3本で失敗。
-- ブラックオニキス / エメラルド：クルクルワールド。盤面準備後3秒で自動開始し、同方向の対を選択。4×4 → 6×6 → 8×8 → 10×10 → 12×12。進行は宝石別。
+| World 1の宝石 | ミニゲーム |
+| --- | --- |
+| ダイヤモンド | Glass Break：自動開始後、赤い点を期限内にタップ |
+| ルビー | Glass Trace：十字と縦横ガイドを使って緑の点を追跡、ヒビ3本で失敗 |
+| サファイア | クルクルワールド：自動開始、同じ回転方向のペアをタップ |
+| 黒曜石 | Crusher Room：10秒で何枚割れるかに挑戦、1枚3タップ、弱点命中で加点 |
 
-## 構成
+宝石別に深度1〜6へ進行。無料範囲は深度1〜3、最大3.00ct。深度4〜6には買い切りの購入権利も必要です。報酬は成績から決定し、深度6で同じ宝石のS評価3連続により20.00ct。体力・サブスクリプション・ランダム抽選はありません。World 2はComing soon表示だけです。
 
-- `Sources/App`：SwiftUI画面とセッション管理。
-- `Sources/Core`：ゲーム判定、保存スキーマ、品質方針、将来の同期境界。画面描画に依存しない。
-- `Sources/Rendering`：宝石ごとのメッシュ、光学シェーダー、Metal入力と描画。
-- `Sources/Features/Glass`：今回必要なGlassTrace由来の亀裂・破砕エンジン。
-- `Tests`：判定・保存・移行・中断復帰・UI回帰。
-- `docs`：回答済みExcel、計画第3版、Geminiレビュー、元コミット情報。
+リングは種類ごとの最大個体を12固定枠へ表示します。同重量なら先に入手した個体を優先。小さい個体も「宝石箱」に残り、種類・重量・入手順で探せます。幅375ptで1ctの表示幅17pt、幅はctの立方根に比例するゲーム用の尺度です。実物のmmを再現するものではありません。宝石箱は軽量な模式アイコンで相対サイズを示します。
 
-まず単独のXcodeターゲット内で責務を分離。独立Swift Packageへの公開API化は次段階です。元実験アプリのエントリーポイントは含みません。
+## 保存と復元
 
-## 保存・移行
+端末内 `Application Support/Tamor/save-v1.json`。ファイル名は互換性のため維持、内容の `schemaVersion` は3。原子的置換と `save-v1.backup.json` を使用し、未知の将来スキーマは上書きしません。旧サイズは3乗をctへ換算し、旧履歴と最大所持を移行します。ブラックオニキスとエメラルドは「旧コレクション」に残ります。報酬は結果IDで重複排除し、書き込み成功後に画面へ反映します。
 
-端末内 `Application Support/Tamor/save-v1.json`。ファイル名は互換性のため維持、内容の `schemaVersion` は2。原子的置換と `save-v1.backup.json` を使用。将来版の未知スキーマは自動上書きしません。
+Crusherの未完了進行は同じフォルダの `crusher-timed-checkpoint.json` へ保存。再起動後は中断時の深度を先に再開します。明示的な退出ではその10秒チャレンジの未完了分を破棄し、確定済み報酬を保持します。
 
-旧JewelRingとはBundle IDが違うのでデータコンテナも異なります。旧アプリの設定でJSONを書き出し、Tamorの設定から取り込めます。取り込みはコレクションが空の時のみ。旧記録は新しいルールの自己ベストと混ぜません。
+初回公開版ではCloudKitを使用しません。同期呼出し・同期UI・iCloud署名を除外し、既存の同期ソースとEntitlementsファイルは将来用に保持しています。宝石は端末保存とJSON書き出し・取り込みで保管します。RevenueCatによる購入復元はWorld 1の解放権利が対象で、宝石は復元しません。
 
-ゲーム結果はセッションUUIDで重複排除。`PlayerCloudSnapshot` は所持・進行・ルール別記録・称号・結果を抽出し、リングの回転角・端末の画質設定を除外します。CloudKit/サインインは未接続。将来の競合方針はユーザーが正本の端末を選ぶ上書き方式です。公開リングは軽量DTOを別のLaravel APIへ提供する想定で、接続コードはありません。
+旧JewelRingからのJSON取り込みはコレクションが空の時だけ可能。既存Tamorの保存は自動移行します。
 
-## 描画と検証範囲
+## 課金の接続と公開準備
 
-4種類のカット・屈折率・RGB吸収係数を分離。RGB吸収は美術用近似であり分光計測値ではありません。ダイヤの原子表示は既存の模式構造。その他の鉱物は正しい格子データが未整備のため準備中と明示します。
+Tamor専用のRevenueCat公開SDKキーを `project.yml` に登録し、`Config/Info.plist` を介してアプリへ渡します。秘密キーではありません。Apple商品 `com.marcottlab.tamor.world1.depth`、Entitlement `world1_full_depth`、既定Offering `default` のLifetimeパッケージを接続済みです。日本400円・米国1.99ドル、商品の配信地域は日本・米国。画面の価格はストアから取得して表示します。
 
-リングの背景は青灰色の「光の窓格子」。背景と屈折先で同じ模様・光を参照し、表面の反射にも窓の桟を映します。設定で光の動きを停止でき、省電力・視差効果を減らす設定でも静止します。
+購入状態は購入・復元・フォアグラウンド復帰に加え、RevenueCatのCustomerInfo更新でも反映します。Debugの `--ui-test` だけSDK通信を無効化し、UI検証データを分離します。実購入の試験ではこの引数を付けません。
 
-通常描画は背面のカット形状・深度を別パスに描き、厚みに応じた色の吸収と背景の屈折を計算。RTがOFFでも内部の面と透過光を表現します。ブラックオニキスは不透明な研磨石として描画。通常描画とRTは同じメッシュ・照明・材質を共有。RTは対応するApple GPU（Apple9以上＋render-stage RT対応）の詳細観察に限定。最大4回の内部光線追跡。実機計測済みリストがまだないため初期OFF。シミュレーターはRT無効で理由を表示します。現在は互換Metal APIを使用し、Metal 4専用コマンドキュー・A20固有最適化は未採用です。
+**実購入・復元・コード引換は未検証、App Storeの審査には未提出です。** 最新状況は[1.0公開準備の検証記録](docs/release/verification-1.0.md)を参照してください。旧v4接続手順のCloudKit有効化は初回公開版には適用しません。
 
-自動画質はCPU/GPU処理時間のヒステリシスと温度・省電力状態で変化。破砕は300msの生成予算を超えると12個の大きな破片へ切替（破壊開始後のみ角丸面の矩形近似）。点数・制限時間は変えません。60fps目標、低品質30fps、対応画面で高品質のリングは120fpsを要求します。実機の達成fps・発熱・電池消費は未測定です。
+## 描画
 
-## テスト
+宝石種ごとの屈折率・RGB吸収と光の窓格子を利用します。RGB吸収は美術用近似です。サファイアと黒曜石の材質を追加しました。RTは対応GPUで選択中の宝石1個へ適用し、通常描画へフォールバックします。シミュレーターではRT無効。互換Metal APIを使用し、Metal 4専用機能・A20固有最適化はありません。
 
-`xcodebuild -project Tamor.xcodeproj -scheme Tamor -destination 'platform=iOS Simulator,name=iPhone 17 Pro' test CODE_SIGNING_ALLOWED=NO`
+Crusherの破片生成は150msの予算または低品質判定で粗い形状へ切り替えます。CPU/GPU時間・温度・省電力状態から描画品質を調整しますが、期限と報酬条件は変えません。実機の継続性能・発熱は別途測定が必要です。
 
-署名チームは実機配布開始時に設定してください。課金、CloudKit、公開リング、チュートリアル、週替わりランキングは今回の接続対象外です。
+## 構成と検証
 
-称号を得ると対象の石座に月桂冠を表示します。サイズ1.8の宝石を得ると光輪・高研磨が選べます。自己ベストは盤面・対象数・距離条件・ルール版が同じ記録だけを比較します。
+- `Sources/Core`：保存、カラット・深度・報酬、Crusher判定、CloudKit。
+- `Sources/App`：リング、宝石箱、各ゲーム、購入画面。
+- `Sources/Rendering`：Metal描画、入力、宝石光学。
+- `Sources/Features/Glass`：亀裂・破片エンジン。
+- `Tests`：移行・保存・ルール・GPU描画・UI。
 
-実装範囲・テスト結果・確認画像は [検証メモ](docs/verification.md) を参照。
+基本ロジックは `bash scripts/test-core.sh`。iOSテストは `xcodebuild -project Tamor.xcodeproj -scheme Tamor -destination 'platform=iOS Simulator,name=iPhone 17 Pro' test CODE_SIGNING_ALLOWED=NO`。
+
+[採用回答](docs/accepted-decisions-v4.md)・[検証記録](docs/verification-v4.md)・[旧版の検証記録](docs/verification.md)。旧版文書と相違する箇所は、回答済み第4版とこのREADMEが現在の仕様です。
+
+最新の変更は[Crusher 10秒・Weak Point / Rubyガイド](docs/crusher-weakpoint-update.md)を参照。
