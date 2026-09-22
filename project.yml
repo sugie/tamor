@@ -24,6 +24,10 @@ targets:
       properties:
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        # 輸出コンプライアンス: 通信は RevenueCat SDK 経由の HTTPS のみで、
+        # 独自の暗号実装を持たない（CryptoKit / CommonCrypto の使用なし）。
+        # false にすることで、ビルドごとの暗号化に関する質問を省略できる。
+        ITSAppUsesNonExemptEncryption: false
         RevenueCatAPIKey: $(TAMOR_REVENUECAT_API_KEY)
     sources:
       - path: Sources
