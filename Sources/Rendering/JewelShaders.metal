@@ -3,7 +3,7 @@
 using namespace metal;
 struct JewelVertex { float4 position; float4 normal; };
 struct JewelInstance { float4x4 model; float4 color; float4 material; };
-struct JewelFrame { float4 values; float4 dimensions; float4 scene; };
+struct JewelFrame { float4 values; float4 dimensions; float4 scene; float4 focus; };
 struct JewelOut { float4 position [[position]]; float3 normal; float3 world; float3 local; float3 localView;float3 localNormal;float3 axisX;float3 axisY;float3 axisZ; float scale; uint objectID [[flat]]; float4 color; float4 material; };
 vertex JewelOut jewelVertex(uint v [[vertex_id]], uint i [[instance_id]],constant JewelVertex* vertices [[buffer(0)]],constant JewelInstance* instances [[buffer(1)]],constant JewelFrame& frame [[buffer(2)]]) {
     JewelVertex a=vertices[v];JewelInstance b=instances[i];float4 p=b.model*a.position;
@@ -66,6 +66,7 @@ float3 gemLighting(float3 direction,float3 origin,constant JewelFrame& frame) {
     return studio(d)*0.4+windowRoom(p,frame)*(0.45+1.7*facing);
 }
 float3 tone(float3 c) {return clamp((c*(2.51*c+0.03))/(c*(2.43*c+0.59)+0.14),0.0,1.0);}
+float3 ringBackdrop(float2 p,constant JewelFrame& frame);
 float4 shadeGem(JewelOut in,constant JewelFrame& frame,float pathMM,float3 inside) {
     float noise=fract(sin(dot(floor(in.position.xy),float2(12.9898,78.233)))*43758.5453);
     if(in.material.z<=0 || noise>in.material.z) discard_fragment();
@@ -90,7 +91,14 @@ float4 shadeGem(JewelOut in,constant JewelFrame& frame,float pathMM,float3 insid
         float spec=pow(max(0.0,dot(n,normalize(l+v))),64.0);
         c=c*(0.22+0.70*diffuse)+float3(0.95,0.90,0.76)*spec*0.6;
     }
-    return float4(tone(max(c,float3(0))),1);
+    // A warm key and a cooler rim make the selected facets catch the stage light.
+    float focus=frame.scene.x<0.5 ? max(0.0,-in.material.w):0.0;
+    float key=pow(max(0.0,dot(n,normalize(float3(-0.45,0.65,1.2)))),12.0);
+    float rim=pow(1-abs(dot(n,v)),3.0);
+    c=c*(1+focus*0.65)+focus*(key*float3(0.5,0.40,0.25)+rim*float3(0.10,0.17,0.25));
+    float3 result=tone(max(c,float3(0)));
+    if(frame.scene.x<0.5 && in.color.a<1)result=mix(tone(ringBackdrop(in.world.xy,frame)),result,in.color.a);
+    return float4(result,1);
 }
 float3 ringBackdrop(float2 p,constant JewelFrame& frame);
 float3 boardBackdrop(float2 p,constant JewelFrame& frame);
@@ -166,8 +174,14 @@ vertex JewelBG jewelBackgroundVertex(uint id [[vertex_id]]) {
     float2 p=float2(id==1 ? 3:-1,id==2 ? 3:-1);JewelBG o;o.position=float4(p,0.99,1);o.uv=p;return o;
 }
 float3 ringBackdrop(float2 p,constant JewelFrame& frame) {
+    // Invert the same Rx * Ry plane projection used for gems and hit testing.
+    // The studio window remains fixed while the ring and its seats tilt together.
+    float2 windowPoint=p;
+    float tx=frame.scene.z,ty=frame.scene.w;
+    p.x/=cos(ty);
+    p.y=(p.y-sin(tx)*sin(ty)*p.x)/cos(tx);
     float r=length(p),aa=3.0/max(frame.dimensions.x,1.0);
-    float3 c=windowRoom(p,frame);
+    float3 c=windowRoom(windowPoint,frame);
     // Darken the rim into the surrounding app chrome, keeping all twelve seats illuminated.
     float vignette=smoothstep(0.91,1.19,r);
     c=mix(c,float3(0.00194,0.00333,0.00521),vignette);
@@ -194,14 +208,23 @@ float3 ringBackdrop(float2 p,constant JewelFrame& frame) {
             c=mix(c,float3(0.09,0.055,0.019),clamp((seat+outerSeat*0.25)*strength*(1-frame.values.y)*1.8,0.0,1.0));
         }
         float a=atan2(p.y,p.x),tick=pow(max(0.0,cos(a*60.0)),90.0);
-        c+=float3(0.58,0.50,0.36)*tick*smoothstep(0.86,0.87,r)*(1-smoothstep(0.888,0.9,r))*0.30;
+        c+=float3(0.58,0.50,0.36)*tick*smoothstep(0.86,0.87,r)*(1-smoothstep(0.888,0.9,r))*0.30*(1-frame.values.y);
         float mark=exp(-dot((p-float2(0,-0.9))*float2(150,120),(p-float2(0,-0.9))*float2(150,120)));
-        c+=float3(0.90,0.73,0.42)*mark;
-    } else {
-        c+=float3(0.035,0.048,0.06)*exp(-r*r*2.2);
-        float grid=pow(max(0.0,cos(p.x*32))*max(0.0,cos(p.y*32)),80.0)*0.028;
-        c+=grid*smoothstep(1.6,2.2,frame.values.z);
+        c+=float3(0.90,0.73,0.42)*mark*(1-frame.values.y);
     }
+    // Follow the chosen gem with a soft theatrical pool and two feathered beams.
+    // This radiance also passes through the transparent facets via transmittedScene.
+    float focus=clamp(frame.values.y,0.0,1.0);
+    float2 q=windowPoint-frame.focus.xy;
+    float pool=exp(-dot(q*float2(3.3,4.6),q*float2(3.3,4.6)));
+    float halo=exp(-dot(q,q)*7.0);
+    float above=smoothstep(-0.10,0.16,q.y);
+    float width=0.055+max(0.0,q.y)*0.22;
+    float left=exp(-pow((q.x+q.y*0.42)/width,2.0));
+    float right=exp(-pow((q.x-q.y*0.52)/(width*0.8),2.0));
+    float3 stage=float3(0.0018,0.003,0.006)+float3(0.11,0.079,0.037)*pool+float3(0.008,0.015,0.029)*halo;
+    stage+=above*(left*float3(0.042,0.030,0.014)+right*float3(0.013,0.024,0.045));
+    c=mix(c,stage,focus);
     return c;
 }
 float3 boardBackdrop(float2 p,constant JewelFrame& frame) {

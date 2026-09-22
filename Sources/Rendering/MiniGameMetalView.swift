@@ -104,7 +104,7 @@ final class MiniTouchView:MTKView {
     var slot=0
     init(_ s:JewelMiniSession)throws {
         session=s
-        guard let d=MTLCreateSystemDefaultDevice(),let q=d.makeCommandQueue(),let lib=d.makeDefaultLibrary() else { throw SaveFailure.unreadable }
+        guard let d=MTLCreateSystemDefaultDevice(),let q=d.makeCommandQueue(),let lib=d.makeDefaultLibrary() else { throw NSError(domain:"MiniGameMetal",code:1,userInfo:[NSLocalizedDescriptionKey:"この端末では宝石の描画に必要な Metal 機能を利用できません。"]) }
         device=d;queue=q
         backSurface=try GemBackSurface(device:d,library:lib)
         func make(_ vertex:String,_ fragment:String,blend:Bool=false)throws->MTLRenderPipelineState {
@@ -118,12 +118,25 @@ final class MiniTouchView:MTKView {
             return try d.makeRenderPipelineState(descriptor:p)
         }
         markerPipeline=try make("jewelVertex","soulTargetFragment",blend:true)
-        let noDepth=MTLDepthStencilDescriptor();noDepth.depthCompareFunction = .always;noDepth.isDepthWriteEnabled=false;markerDepth=d.makeDepthStencilState(descriptor:noDepth)!
+        let noDepth=MTLDepthStencilDescriptor();noDepth.depthCompareFunction = .always;noDepth.isDepthWriteEnabled=false
+        guard let markerDepth=d.makeDepthStencilState(descriptor:noDepth) else {
+            throw NSError(domain:"MiniGameMetal",code:2,userInfo:[NSLocalizedDescriptionKey:"宝石の描画に必要な深度設定を準備できませんでした。"])
+        }
+        self.markerDepth=markerDepth
         quad=try JewelGeometry.mesh([SIMD2<Float>(-1,-1),.init(1,-1),.init(1,1),.init(-1,-1),.init(1,1),.init(-1,1)].map{.init(position:.init($0.x,$0.y,0,1),normal:.init(0,0,1,0))},device:d)
         pipeline=try make("jewelVertex","jewelFragment");bg=try make("jewelBackgroundVertex","miniBoardBackground")
-        let dd=MTLDepthStencilDescriptor();dd.depthCompareFunction = .less;dd.isDepthWriteEnabled=true;depth=d.makeDepthStencilState(descriptor:dd)!
+        let dd=MTLDepthStencilDescriptor();dd.depthCompareFunction = .less;dd.isDepthWriteEnabled=true
+        guard let depth=d.makeDepthStencilState(descriptor:dd) else {
+            throw NSError(domain:"MiniGameMetal",code:2,userInfo:[NSLocalizedDescriptionKey:"宝石の描画に必要な深度設定を準備できませんでした。"])
+        }
+        self.depth=depth
         gem=try JewelGeometry.mesh(JewelGeometry.gem(s.kind),device:d);sphere=try JewelGeometry.mesh(JewelGeometry.sphere(),device:d)
-        buffers=(0..<3).map{_ in d.makeBuffer(length:8192*MemoryLayout<JewelInstance>.stride,options:.storageModeShared)!}
+        buffers=try (0..<3).map { _ in
+            guard let buffer=d.makeBuffer(length:8192*MemoryLayout<JewelInstance>.stride,options:.storageModeShared) else {
+                throw NSError(domain:"MiniGameMetal",code:3,userInfo:[NSLocalizedDescriptionKey:"宝石の描画に必要なGPUメモリを確保できませんでした。"])
+            }
+            return buffer
+        }
     }
     func mtkView(_ view:MTKView,drawableSizeWillChange size:CGSize) {}
     func draw(in v:MTKView) {

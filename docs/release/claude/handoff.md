@@ -126,3 +126,69 @@ Codex の依頼により、CloudKit 除去・`customerInfoStream` 監視・`offe
 4. `String(format:)` は `Locale` を渡していないため、数値は常に「.」小数点・桁区切りなしです(日英とも表示上は正しい)。
 5. 設定画面のプライバシーポリシーへのリンクは未追加のままです(URL 未確定)。追加時は文言をカタログへ登録してください。
 6. 文書側: `privacy-policy.*.md` と `store-listing.md` は「保存データを書き出す」機能が 1.0 に残る前提の `【要確認】` を含みます。今回の設定画面に書き出し/取り込みが残っていることは確認しましたが、文書の空欄は人間の確定待ちのため埋めていません。
+
+---
+
+## 7. 追記（2026-09-22、Codex）：案 B の実装・実機検証
+
+`device-support-plan.html` を読み、ユーザー指定の案 B を実装。案 C（`iphone-performance-gaming-tier`）は追加していません。追加指示でローカルの実機ビルド・インストール・テストまで許可されました。アーカイブ、IPA書き出し、アップロード、審査提出、ストア設定変更は実施していません。
+
+### 今回の変更
+
+| ファイル | 内容 |
+| --- | --- |
+| `project.yml` | 最低 iOS 26.0、iPhone 専用、iPad 向け画面方向設定削除、必要機能 `[arm64, metal]`。XcodeGen のターゲット既定値 `1,2` がプロジェクト設定を上書きするため、アプリ・単体テスト・UIテストの各ターゲットにも `TARGETED_DEVICE_FAMILY: '1'` を明示。既存の署名チーム設定を再生成後も保持するため、同じ DEVELOPMENT_TEAM を生成元にも記載 |
+| `Tamor.xcodeproj/project.pbxproj` | XcodeGen で再生成。プロジェクトと全ターゲットの Debug/Release で family=1。作業前から存在したアプリ・Privacy Manifest のファイル型メタデータ変更と署名チームを保持 |
+| `Config/Info.plist` | XcodeGen が arm64 / metal を生成したことを確認 |
+| `Sources/Rendering/MiniGameMetalView.swift` | Metal 初期化失敗を保存データのエラーから Metal 用 NSError に変更。2箇所の深度状態と3個のバッファ確保を guard/throw に変更 |
+| `Sources/Features/Glass/GlassFragmentEngine.swift` | シェーダ関数取得の強制アンラップを guard/throw に変更。既存の失敗通知経路を利用 |
+| `Sources/Localizable.xcstrings` | 初期化・深度設定・GPUメモリ・破片シェーダの案内4件を日英追加。作業前の全キーと値を保持していることを JSON 比較で確認 |
+| `Tests/UI/JewelRingUITests.swift` | 既存UIテストが直接カバーしていなかったダイヤモンドの描画準備完了・Metalエラーなしを確認するテスト1件を追加 |
+| `docs/release/claude/store-listing.md` | 日英で iPhone / iOS 26以上、iPad互換モードの動作保証なし、iPad画像不要に更新 |
+| `docs/release/claude/app-review-notes.md` | 同じ対応範囲に更新。iPhone 17世代・iPadは未検証と記載 |
+| `docs/release/testflight-info.md` | 次回ビルド用の文案として対応範囲と検証端末を更新。既存アップロード済み 1.0(5) の要件が変わったという意味ではないことを明記 |
+| `docs/release/claude/handoff.md` | 本追記 |
+
+保存ID、商品ID、Entitlement、ゲームロジックは変更していません。バージョンは従来の 1.0(5) を維持（今回のビルドはローカル検証用）。`Sources` の `#available` / `@available` / iOS 17 向け記述を検索し、今回削除する分岐はありませんでした。Metal のソフトウェア経路は削除していません。未コミット変更の reset / clean / stash / commit / ブランチ切替は実施していません。
+
+### 完了した検査
+
+- iPhone 12 mini は [Apple の iOS 26 対応一覧](https://support.apple.com/guide/iphone/iphe3fa5df43/26/ios/26)に記載。USB接続した実機は **iOS 26.6.1 (23G83)**、Developer Mode有効で、ユーザーからも同じOSとロック解除を確認。OS更新は不要でした。
+- `bash scripts/test-core.sh` 成功：4,341 checks と 508 assertions、合計 **4,849**。
+- XcodeGen生成、plist構文検査、`git diff --check`、既存翻訳キー/値の保持、案C未導入、強制アンラップ除去の静的検査に成功。
+- **生成された実機用 Tamor.app** の Info.plist を確認：`MinimumOSVersion=26.0`、`UIDeviceFamily=[1]`、`UIRequiredDeviceCapabilities=[arm64, metal]`、iPad画面方向キーなし。アプリ内の日英 Localizable.strings に新しいMetal案内が含まれることも確認。
+- 実機向け Debug ビルド・署名・インストール成功。iPhone 12 mini上の既存単体テスト **37件成功**。
+- 最初のビルドでターゲット既定値により生成アプリが `[1,2]` となることを検出し、自分が開始したビルドだけを中断。各ターゲットに family=1 を明示し、再生成後のアプリでは `[1]` と確認しました。
+
+### メモリーと実行条件
+
+既存の `~/Library/Developer/Xcode/DerivedData/Tamor-bamxjxkpqeavuiekjjsgenvblcdy` と既存パッケージキャッシュを利用。DerivedData削除、clean、インデックス再構築操作はしていません。`-jobs 1 -parallel-testing-enabled NO -maximum-concurrent-test-device-destinations 1 COMPILER_INDEX_STORE_ENABLE=NO` を指定し、実機のUDIDを destination に指定しました。Simulatorは起動・操作・テストしていません（作業開始時点で別のSimulatorプロセスは存在していました）。
+
+3秒ごとにXcode・ビルド/Swift/Metal関連プロセスのRSS合計とシステムスワップを記録。RSS合計8 GiB超またはスワップ2 GiB超で、この作業のビルドプロセス群のみ中断する監視を付けました。最初の実行で最大 **1,523.0 MiB**、設定修正後の実行で最大 **1,360.7 MiB**、スワップはともに **0 MiB**。これはサンプリングしたRSSであり、Activity Monitorの「メモリ」と同じ指標ではありません。前回の184GB問題の根本原因解消を示すものではありません。
+
+ログと監視スクリプトは `build/device-support-20260922/`（Git対象外）、詳細テスト結果は `/tmp/tamor-device-support/device-tests-final.xcresult` に保存。
+
+### UI検証の状態・未決事項
+
+- UIテストの初回実行は Runner 初期化中に `Timed out while enabling automation mode` で停止。テスト結果全体は Failed、内訳は単体テスト37件成功・UI Runnerの開始エラー1件です。UIテストのアサーションが失敗したものではありません。
+- **09:02 追記：実機側の暗証番号入力をユーザーが完了した後、`test-without-building -only-testing:TamorUITests` で再ビルドせず再実行。日本語6件・英語3件、合計9件すべて成功（約202秒、終了コード0）。** ダイヤモンド描画、サファイア獲得・再起動後の保存、ルビーのガイドと操作、黒曜石のプレイ・報酬、ホーム・宝石箱、購入画面・設定、英語文言を確認しました。これで今回の実機単体37件＋UI9件の計46件が成功です。
+- iPhone 17世代、iPad互換モード、iOS 26.0ちょうどでの動作は未検証。iPhone専用設定はiPadへの互換インストールを禁止するものではなく、その動作を保証しません。
+- 実購入・復元は未検証。既存UIテストは `--ui-test` で課金サービスを接続しない構成の画面検証で、決済成功の証拠にはなりません。
+- nilを返すMetal機能を実機で故意に発生させる障害注入は未実施。日英案内のバンドルとguard/throw経路は確認済みです。
+- 既存の `UIRequiresFullScreen` についてiOS 26での非推奨警告、および単体テスト起動中にSwiftUIのview更新中の状態発行に関する警告がありました。本作業でゲームロジック変更や無関係の整理はしていません。
+- 今後アップロードする際はビルド番号を別途増やし、App Store Connect上で対応範囲を確認する必要があります。今回ストア側の変更はしていません。
+
+### UIテスト再開後の記録（09:02）
+
+- 認証待ちは、ユーザーがiPhone上で暗証番号を入力して解消しました。追加のコード変更・再ビルドはありません。
+- 再実行の監視対象RSS最大値は **1,214.7 MiB**、システムスワップ **0 MiB**。しきい値による中断なし。
+- ログ・メモリー計測・スクリーンショットを含む `.xcresult` を `build/device-support-20260922/device-ui-retry*` に保存（Git対象外、ローカルのみ）。
+- テスト終了時に devicectl の診断収集だけがエラーになりましたが、UIテスト9件は全件成功で、xcodebuild は `TEST EXECUTE SUCCEEDED`・終了コード0です。診断収集エラーはUIテストの不合格と区別しています。
+- 残る未検証事項は上記の通り：他機種・iPad、iOS 26.0ちょうど、実決済/復元、Metalの障害注入、長時間の負荷。アーカイブ・アップロード・公開操作はしていません。
+
+
+## 8. 追記（2026-09-22 11:18、Codex）：iPad実機検証完了
+
+iPad第8世代／iPadOS 26.7のiPhone互換モードで、UIテスト日本語6件・英語3件は再実行分を含めて全項目成功。9件実行は8件成功・1件失敗、テスト操作の修正後に残る深度2の1件が成功しました。テスト引数なしの通常起動も成功し、Xcodeの実機スクリーンショットでホームとMetal描画を確認しました。白画面は今回再現せず、以前の原因は未確定です。
+
+詳細と証跡は[検証記録](../ipad-verification-2026-09-22.md)を参照。上記7節の「iPad未検証」は本追記で更新します。iPadの動作保証範囲、実購入・復元、長時間負荷についての制限は残ります。

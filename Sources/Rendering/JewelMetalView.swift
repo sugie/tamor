@@ -16,7 +16,8 @@ struct JewelMetalView:UIViewRepresentable {
         view.isOpaque=true;view.accessibilityIdentifier="jewel.scene"
         return view
     }
-    func updateUIView(_ view:JewelTouchView,context:Context) { view.isPaused=state.paused;view.refreshAccessibility() }
+    func updateUIView(_ view:JewelTouchView,context:Context) { view.isPaused=state.paused;state.setMotionVisible(view.window != nil);view.refreshAccessibility() }
+    static func dismantleUIView(_ view:JewelTouchView,coordinator:JewelRenderer?) {view.state?.setMotionVisible(false);view.isPaused=true;view.delegate=nil}
 }
 
 final class JewelAccessibilityElement:UIAccessibilityElement {
@@ -50,7 +51,7 @@ final class JewelTouchView:MTKView {
     }
     required init(coder:NSCoder) { fatalError("Programmatic view") }
     override func didMoveToWindow() {
-        super.didMoveToWindow();var parent=superview
+        super.didMoveToWindow();state?.setMotionVisible(window != nil);var parent=superview
         while let v=parent {
             if let scroll=v as? UIScrollView { scroll.panGestureRecognizer.require(toFail:pan);break }
             parent=v.superview
@@ -66,27 +67,48 @@ final class JewelTouchView:MTKView {
     }
     @objc private func tapped(_ g:UITapGestureRecognizer) {
         guard let state,!state.paused else { return }
+        if state.inspecting {
+            let p=state.displayPosition(state.kind)
+            let center=CGPoint(x:(p.x+1)*bounds.width/2,y:(1-p.y)*bounds.height/2)
+            let size=max(44,GemScale.width(centicarats:state.weight(state.kind),viewport:bounds.width))
+            if CGRect(x:center.x-size/2,y:center.y-size/2,width:size,height:size).contains(g.location(in:self)) {state.back()}
+            return
+        }
         if let jewel=state.hit(normalized(g.location(in:self))) { state.activate(jewel.rawValue) }
     }
     @objc private func doubleTapped(_ g:UITapGestureRecognizer) {
         guard let state,!state.paused else { return }
-        if state.inspecting { state.startGame(state.kind,previewOnly:state.save.inventory[state.kind.key]==nil);return }
+        if state.inspecting { guard state.inspectionSettled else {return};state.startGame(state.kind,previewOnly:state.save.inventory[state.kind.key]==nil);return }
         if let jewel=state.hit(normalized(g.location(in:self))) { state.startGame(jewel,previewOnly:state.visible.contains(jewel) && state.save.representative(jewel.key)==nil) }
     }
     @objc private func panned(_ g:UIPanGestureRecognizer) {
         guard let state,!state.paused else { return }
+        if state.inspecting {
+            guard state.inspectionSettled else {return}
+            switch g.state {
+            case .began: initialYaw=state.yaw;initialPitch=state.pitch;state.dragging=true
+            case .changed:
+                let t=g.translation(in:self),scale=Float(max(1,min(bounds.width,bounds.height)))
+                state.rotateInspection(yaw:initialYaw+Float(t.x)/scale * .pi*2,pitch:initialPitch+Float(t.y)/scale * .pi*2)
+            case .ended,.cancelled,.failed: state.dragging=false
+            default:break
+            }
+            return
+        }
         let point=normalized(g.location(in:self)),now=CACurrentMediaTime()
         switch g.state {
         case .began:
             let t=g.translation(in:self),p=g.location(in:self)
-            let origin=normalized(CGPoint(x:p.x-t.x,y:p.y-t.y))
+            let origin=RingTiltMath.unproject(normalized(CGPoint(x:p.x-t.x,y:p.y-t.y)),tilt:state.ringTilt)
             panStarted=simd_length(origin)>0.35
             guard panStarted else { return }
             state.dragging=true;state.snap=nil;state.velocity=0
-            angle=atan2(point.x,-point.y);timestamp=now
+            let local=RingTiltMath.unproject(point,tilt:state.ringTilt)
+            angle=atan2(local.x,-local.y);timestamp=now
         case .changed:
             guard panStarted,simd_length(point)>0.25 else { return }
-            let a=atan2(point.x,-point.y),delta=RingLayoutMath.wrapped(a-angle)
+            let local=RingTiltMath.unproject(point,tilt:state.ringTilt)
+            let a=atan2(local.x,-local.y),delta=RingLayoutMath.wrapped(a-angle)
             state.ringAngle+=delta
             state.velocity=min(6,max(-6,delta/max(0.008,now-timestamp)))
             state.moved()
@@ -105,13 +127,13 @@ final class JewelTouchView:MTKView {
     }
     func refreshAccessibility() {
         guard let state else { return }
-        let list=JewelKind.worldOne
-        let keys=list.map(\.key).joined(separator:",")
+        let list=state.inspecting ? [state.kind]:JewelKind.worldOne
+        let keys=(state.inspecting ? "inspection:":"ring:")+list.map(\.key).joined(separator:",")
         if axKeys != keys {
             axItems=list.map { jewel in
                 let e=JewelAccessibilityElement(accessibilityContainer:self);e.state=state;e.index=jewel.rawValue
                 e.accessibilityIdentifier="jewel.\(jewel.key)";e.accessibilityLabel=L(jewel.name)
-                e.accessibilityHint=L("情報を表示。プレイボタンからゲームを開始できます。");return e
+                e.accessibilityHint=L(state.inspecting ? "スワイプで回転。宝石をタップでリングに戻ります。":"タップで宝石を中央に表示。未獲得の台座はゲームを開始します。");return e
             };accessibilityElements=axItems;axKeys=keys
         }
         for jewel in JewelKind.worldOne {
@@ -122,14 +144,14 @@ final class JewelTouchView:MTKView {
             label.textColor=UIColor(white:0.96,alpha:owned ? 0.8:1)
             label.backgroundColor=UIColor(red:0.025,green:0.043,blue:0.063,alpha:0.82)
             label.layer.cornerRadius=4;label.clipsToBounds=true
-            label.isHidden=state.visible.contains(jewel)
+            label.isHidden=state.inspectionProgress>=1 || state.visible.contains(jewel)
             label.alpha=1-state.inspectionProgress
-            let p=state.position(jewel)
+            let p=state.displayPosition(jewel)
             label.frame=CGRect(x:(p.x+1)*bounds.width/2-55,y:(1-p.y)*bounds.height/2+bounds.width*0.058,width:110,height:30)
         }
         for e in axItems {
             guard let jewel=JewelKind(rawValue:e.index) else { continue }
-            let p=state.position(jewel),size=max(44,GemScale.width(centicarats:state.weight(jewel),viewport:bounds.width))
+            let p=state.displayPosition(jewel),size=max(44,GemScale.width(centicarats:state.weight(jewel),viewport:bounds.width))
             e.accessibilityFrameInContainerSpace=CGRect(x:(p.x+1)*Double(bounds.width)/2-Double(size)/2,y:(1-p.y)*Double(bounds.height)/2-Double(size)/2,width:Double(size),height:Double(size))
             let frame=e.accessibilityFrameInContainerSpace
             e.accessibilityActivationPoint=UIAccessibility.convertToScreenCoordinates(CGRect(x:frame.midX,y:frame.midY,width:0,height:0),in:self).origin

@@ -9,26 +9,42 @@ final class JewelRingUITests:XCTestCase {
         XCTAssertTrue(app.buttons["ring.games"].waitForExistence(timeout:15))
     }
     func tap(_ element:XCUIElement) {
-        for _ in 0..<6 {if element.isHittable {break};app.swipeUp()};element.tap()
+        app.revealAndTap(element)
     }
     func pick(_ kind:String,_ depth:Int=1) {
         tap(app.buttons["ring.games"])
         let button=app.buttons["game.pick.\(kind).\(depth)"]
         tap(button)
     }
-    func shot(_ name:String){let a=XCTAttachment(screenshot:app.screenshot());a.name=name;a.lifetime = .keepAlways;add(a)}
-    func testFixedRingNoZoomAndComingSoonInventory() {
+    func shot(_ name:String){let a=XCTAttachment(screenshot:XCUIScreen.main.screenshot());a.name=name;a.lifetime = .keepAlways;add(a)}
+    func testSingleGemRotationAndReturnWithoutZoom() {
         tap(app.buttons["ring.preview"])
         // Return to the top after the development control scrolls below the ring.
-        app.swipeDown();app.swipeDown()
+        app.scrollContentDown();app.scrollContentDown()
         let diamond=app.buttons["jewel.diamond"];XCTAssertTrue(diamond.waitForExistence(timeout:5))
+        shot("ring-before-inspection")
+        // MTKView's container frame is local in iPad compatibility mode; the
+        // pedestal frames are converted to screen coordinates by the view.
+        let centerX=(app.buttons["jewel.ruby"].frame.midX+app.buttons["jewel.sapphire"].frame.midX)/2
+        let centerY=(diamond.frame.midY+app.buttons["jewel.obsidian"].frame.midY)/2
         let before=diamond.frame;diamond.tap()
         XCTAssertTrue(app.buttons["inspector.back"].waitForExistence(timeout:5))
+        let centered=NSPredicate {_,_ in abs(diamond.frame.midX-centerX)<2 && abs(diamond.frame.midY-centerY)<2}
+        XCTAssertEqual(XCTWaiter.wait(for:[XCTNSPredicateExpectation(predicate:centered,object:nil)],timeout:5),.completed)
         XCTAssertFalse(app.buttons["level.3"].exists);XCTAssertFalse(app.sliders["inspector.zoom"].exists)
+        XCTAssertFalse(app.buttons["jewel.ruby"].exists);XCTAssertFalse(app.buttons["jewel.sapphire"].exists)
+        XCTAssertEqual(diamond.frame.midX,centerX,accuracy:2);XCTAssertEqual(diamond.frame.midY,centerY,accuracy:2)
+        XCTAssertEqual(diamond.frame.width,before.width,accuracy:1);XCTAssertEqual(diamond.frame.height,before.height,accuracy:1)
+        shot("single-gem-same-scale")
+        let center=diamond.coordinate(withNormalizedOffset:.init(dx:0.5,dy:0.5))
+        center.press(forDuration:0.05,thenDragTo:center.withOffset(.init(dx:90,dy:50)))
+        shot("single-gem-after-swipe")
+        diamond.tap() // Single tap on the spotlighted gem reverses the presentation.
+        XCTAssertTrue(app.buttons["jewel.ruby"].waitForExistence(timeout:5))
         XCTAssertEqual(diamond.frame.midX,before.midX,accuracy:2);XCTAssertEqual(diamond.frame.midY,before.midY,accuracy:2)
-        shot("carat-ring")
+        shot("ring-after-inspection")
         tap(app.buttons["ring.inventory"]);XCTAssertTrue(app.staticTexts["まだ宝石がありません"].waitForExistence(timeout:5));shot("empty-inventory")
-        app.buttons["閉じる"].tap();app.swipeDown();app.swipeDown();app.buttons["world.next"].tap()
+        app.buttons["閉じる"].tap();app.scrollContentDown();app.scrollContentDown();app.buttons["world.next"].tap()
         XCTAssertTrue(app.staticTexts["world.comingSoon"].waitForExistence(timeout:5));shot("world-two-coming-soon")
     }
     func testKurukuruAcquisitionAndDepthUnlockSurviveRelaunch() {
@@ -64,6 +80,13 @@ final class JewelRingUITests:XCTestCase {
         XCTAssertTrue(app.buttons["ring.inventory"].waitForExistence(timeout:8))
         XCTAssertEqual(app.staticTexts["ring.count"].label,"収集 1 / 4 種類")
     }
+    func testDiamondRendersWithoutMetalError() {
+        pick("diamond")
+        XCTAssertTrue(app.buttons["mini.target"].waitForExistence(timeout:15))
+        XCTAssertFalse(app.staticTexts["mini.error"].exists)
+        XCTAssertTrue(app.staticTexts["mini.thickness"].exists)
+        shot("diamond-device-rendering")
+    }
     func testRubyGuidesDoNotBlockTouch() {
         pick("ruby")
         let target=app.buttons["mini.target"]
@@ -76,7 +99,7 @@ final class JewelRingUITests:XCTestCase {
         tap(app.buttons["ring.unlock"])
         XCTAssertTrue(app.staticTexts["purchase.status"].waitForExistence(timeout:5))
         XCTAssertFalse(app.buttons["purchase.buy"].isEnabled);shot("purchase-setup-pending")
-        app.buttons["閉じる"].tap();app.swipeDown();app.swipeDown();app.buttons["jewel.settings"].tap()
+        app.buttons["閉じる"].tap();app.scrollContentDown();app.scrollContentDown();app.buttons["jewel.settings"].tap()
         XCTAssertTrue(app.switches["settings.rayTracing"].waitForExistence(timeout:5));XCTAssertFalse(app.switches["settings.rayTracing"].isEnabled)
     }
 }
@@ -92,8 +115,8 @@ final class TamorEnglishUITests:XCTestCase {
         XCTAssertTrue(app.buttons["ring.games"].waitForExistence(timeout:15))
         XCTAssertFalse(app.staticTexts["最初の宝石を見つけよう"].exists,"Localizable.xcstrings is not bundled in the Tamor target; the English UI is not active.")
     }
-    func tap(_ element:XCUIElement) {for _ in 0..<6 {if element.isHittable {break};app.swipeUp()};element.tap()}
-    func shot(_ name:String){let a=XCTAttachment(screenshot:app.screenshot());a.name=name;a.lifetime = .keepAlways;add(a)}
+    func tap(_ element:XCUIElement) {app.revealAndTap(element)}
+    func shot(_ name:String){let a=XCTAttachment(screenshot:XCUIScreen.main.screenshot());a.name=name;a.lifetime = .keepAlways;add(a)}
     /// Every label currently on screen must be free of kana/kanji. Call after the screen has settled.
     func assertNoJapanese(_ screen:String,file:StaticString=#filePath,line:UInt=#line) {
         // Capture once: the reward sheet dismisses automatically after four seconds.
@@ -120,15 +143,16 @@ final class TamorEnglishUITests:XCTestCase {
         XCTAssertTrue(app.buttons["purchase.restore"].exists);XCTAssertFalse(app.buttons["purchase.buy"].isEnabled);shot("en-paywall")
         // The status line is absent once a product loads, so wait for it without requiring it.
         _=app.staticTexts["purchase.status"].waitForExistence(timeout:3);assertNoJapanese("paywall")
-        app.buttons["Close"].tap();app.swipeDown();app.swipeDown();app.buttons["jewel.settings"].tap()
+        app.buttons["Close"].tap();app.scrollContentDown();app.scrollContentDown();app.buttons["jewel.settings"].tap()
         XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout:5))
         shot("en-settings");assertNoJapanese("settings")
         let notice=app.staticTexts["save.localNotice"]
-        for _ in 0..<6 {if notice.exists {break};app.swipeUp()}
+        for _ in 0..<6 {if notice.exists {break};app.scrollContentUp()}
         XCTAssertTrue(notice.label.hasPrefix("Your gems are saved on this device."))
         let restore=app.buttons["Restore Purchases"]
-        for _ in 0..<6 {if restore.exists {break};app.swipeUp()}
+        for _ in 0..<6 {if restore.exists {break};app.scrollContentUp()}
         XCTAssertTrue(restore.exists);shot("en-settings-lower");assertNoJapanese("settings-lower")
+        app.scrollContentUp();shot("en-support-links");assertNoJapanese("support-links")
     }
     func testEnglishRewardResultAndInventory() {
         tap(app.buttons["ring.games"]);shot("en-depth-picker");assertNoJapanese("depth-picker");tap(app.buttons["game.pick.sapphire.1"])
@@ -156,4 +180,32 @@ final class TamorEnglishUITests:XCTestCase {
         XCTAssertTrue(app.staticTexts["crusher.reward"].waitForExistence(timeout:20));shot("en-crusher-result");assertNoJapanese("crusher-result")
         XCTAssertTrue(app.staticTexts["crusher.reward"].label.contains("saved"))
     }
+}
+
+// iPhone compatibility mode on iPad has a smaller app viewport. Target its
+// scroll container, not the full-device application frame (which includes margins).
+private extension XCUIApplication {
+    func revealAndTap(_ element:XCUIElement) {
+        for _ in 0..<12 {
+            let frame=element.exists ? element.frame:CGRect.zero
+            let navigation=navigationBars.firstMatch
+            let top=navigation.exists ? navigation.frame.maxY:windows.firstMatch.frame.minY
+            let bottom=windows.firstMatch.frame.maxY
+            if element.isHittable && frame.midY>top+8 && frame.midY<bottom-8 {break}
+            let container=contentScrollView
+            let belowTop=element.exists && frame.midY<=top+8
+            let start=container.coordinate(withNormalizedOffset:.init(dx:0.5,dy:belowTop ? 0.4:0.75))
+            let end=container.coordinate(withNormalizedOffset:.init(dx:0.5,dy:belowTop ? 0.75:0.4))
+            start.press(forDuration:0.05,thenDragTo:end)
+        }
+        element.tap()
+    }
+    var contentScrollView:XCUIElement {
+        let list=collectionViews.firstMatch
+        if list.exists {return list}
+        let scroll=scrollViews.firstMatch
+        return scroll.exists ? scroll:self
+    }
+    func scrollContentUp() {contentScrollView.swipeUp()}
+    func scrollContentDown() {contentScrollView.swipeDown()}
 }

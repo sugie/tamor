@@ -2,15 +2,19 @@
 
 2026-09-22。App Store一般公開とは別のベータ配布。下記文案は準備済みであり、管理画面へ保存・審査提出したことを示すものではない。
 
+## 対応範囲（案 B の次回ビルド）
+
+iPhone 専用・iOS 26.0 以上。必要機能は arm64 と Metal。iPad の互換モードでの動作は保証しません。iPad 用スクリーンショットは不要です。iPhone 17 世代の実機は未検証。iPad 第8世代（iPadOS 26.7）は互換モードのUIテストと通常起動を確認済み（[検証記録](ipad-verification-2026-09-22.md)）。アップロード済みの 1.0(5) の要件を変更したという意味ではありません。
+
 ## ベータ版の説明（日本語）
 
-Tamorは、4つのミニゲームで宝石を集めるゲームです。ルビーの追跡、サファイアの回転ペア、ダイヤモンドのタイミングタップ、黒曜石の10秒Crusherに挑戦できます。獲得した宝石はリングと宝石箱に残ります。
+Tamorは、iOS 26.0 以上の iPhone 向けの、4つのミニゲームで宝石を集めるゲームです。iPad の互換モードでの動作は保証しません。ルビーの追跡、サファイアの回転ペア、ダイヤモンドのタイミングタップ、黒曜石の10秒Crusherに挑戦できます。獲得した宝石はリングと宝石箱に残ります。
 
 無料は深度1〜3。World 1の買い切り解放で深度4〜6に挑戦できますが、前深度のクリアなどの条件は残ります。World 2は予告表示のみです。宝石・プレイ記録は端末内に保存され、購入の復元では戻りません。
 
 ## Beta App Description (English)
 
-Tamor is a gem-collecting game with four mini-games: trace a target for rubies, match rotating pairs for sapphires, tap timed targets for diamonds, and take on the 10-second Crusher challenge for obsidian. Keep your gems in the ring and Gem Box.
+Tamor is designed for iPhone running iOS 26.0 or later. Operation in iPad compatibility mode is not guaranteed. It is a gem-collecting game with four mini-games: trace a target for rubies, match rotating pairs for sapphires, tap timed targets for diamonds, and take on the 10-second Crusher challenge for obsidian. Keep your gems in the ring and Gem Box.
 
 Depths 1–3 are free. The one-time World 1 unlock grants access to Depths 4–6; progression and skill requirements still apply. World 2 is a preview only. Gems and play records are saved on this device and are separate from restored purchase entitlements.
 
@@ -19,8 +23,10 @@ Depths 1–3 are free. The one-time World 1 unlock grants access to Depths 4–6
 - 初回起動から4種のミニゲームを開始できるか。
 - 判定、ゲームの難しさ、説明で分かりにくい箇所。
 - 結果画面からリングへ戻り、宝石箱に獲得した宝石が残るか。
+- 獲得済み宝石をタップすると、同じ大きさの1個がスポットライトとともに中央へ滑らかに移動し、スワイプで回転できるか。宝石をシングルタップすると逆の演出で元の位置へ戻るか。
+- 端末を前後・左右に傾けたとき、リングが自然に同じ方向へ傾くか。設定でオフにした場合、「視差効果を減らす」がオンの場合、アプリ復帰時も確認。
 - 一時停止・バックグラウンド復帰・アプリ再起動後の動作。
-- iPhone／iPadで文字やボタンの見切れ、タップ位置のずれがないか。
+- iOS 26.0 以上の iPhone で文字やボタンの見切れ、タップ位置のずれがないか。今回の実機検証は iPhone 12 mini のみ。
 - 数分間のプレイで発熱・電池消費・カクつきが気になるか。
 - 日本語／英語の自然さと未翻訳箇所。
 - 購入テストを行う場合はTestFlight版であることを確認し、World 1解放と復元の結果を報告。宝石データの復元とは別です。
@@ -29,7 +35,7 @@ Depths 1–3 are free. The one-time World 1 unlock grants access to Depths 4–6
 
 ## What to Test
 
-Please try all four mini-games, reward collection, the Gem Box, pause/resume, and relaunching the app. Check for clipped text or inaccurate tap targets on iPhone and iPad, unclear instructions, difficulty, heat, battery use, and frame drops. Report Japanese or English wording issues. If testing purchases, confirm you are using the TestFlight build and distinguish the World 1 entitlement from locally saved gems.
+Please try all four mini-games, reward collection, the Gem Box, pause/resume, and relaunching the app. Check for clipped text or inaccurate tap targets on iPhone running iOS 26.0 or later (current device testing is limited to iPhone 12 mini), unclear instructions, difficulty, heat, battery use, and frame drops. Tap a collected gem to bring it into a central spotlight at the same scale, swipe to rotate it, and single-tap it to animate it back to the original ring position. Tilt the device in each direction to check the ring response, its Settings toggle, Reduce Motion, and the neutral pose after resume. Report Japanese or English wording issues. If testing purchases, confirm you are using the TestFlight build and distinguish the World 1 entitlement from locally saved gems.
 
 Include the device, OS, app version/build, steps, expected and actual results, and a screenshot when possible. Export existing save data before deleting the app.
 

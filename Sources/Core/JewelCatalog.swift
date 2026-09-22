@@ -57,6 +57,31 @@ struct RingLayoutMath {
     }
 }
 
+// Orthographic projection shared by the renderer, labels and hit testing.
+enum RingTiltMath {
+    static let limit:Float=0.4
+    static func angles(gravity:SIMD3<Double>)->SIMD2<Double>? {
+        guard gravity.x.isFinite,gravity.y.isFinite,gravity.z.isFinite,simd_length(gravity)>0.5 else {return nil}
+        return .init(atan2(-gravity.y,-gravity.z),atan2(gravity.x,hypot(gravity.y,gravity.z)))
+    }
+    static func relative(_ angles:SIMD2<Double>,to reference:SIMD2<Double>)->SIMD2<Float> {
+        let delta=SIMD2(RingLayoutMath.wrapped(angles.x-reference.x),RingLayoutMath.wrapped(angles.y-reference.y))*0.7
+        return .init(min(limit,max(-limit,Float(delta.x))),min(limit,max(-limit,Float(delta.y))))
+    }
+    static func transform(_ tilt:SIMD2<Float>)->simd_float4x4 {
+        JewelMatrices.rotate(tilt.x,.init(1,0,0))*JewelMatrices.rotate(tilt.y,.init(0,1,0))
+    }
+    static func project(_ point:SIMD2<Double>,tilt:SIMD2<Float>)->SIMD2<Double> {
+        let p=transform(tilt)*SIMD4(Float(point.x),Float(point.y),0,1)
+        return .init(Double(p.x),Double(p.y))
+    }
+    static func unproject(_ point:SIMD2<Double>,tilt:SIMD2<Float>)->SIMD2<Double> {
+        let x=Double(tilt.x),y=Double(tilt.y)
+        let localX=point.x/cos(y)
+        return .init(localX,(point.y-sin(x)*sin(y)*localX)/cos(x))
+    }
+}
+
 struct LatticeAtom { let position:SIMD3<Float>; let species:Int }
 struct LatticeBond { let first:Int;let second:Int }
 struct CrystalLattice {

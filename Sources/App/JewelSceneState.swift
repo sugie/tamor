@@ -1,6 +1,7 @@
 import SwiftUI
 import QuartzCore
 import simd
+import CoreMotion
 
 @MainActor final class JewelSceneState: ObservableObject {
     @Published var save=JewelSave()
@@ -9,8 +10,9 @@ import simd
     @Published var zoom:Double=0
     @Published var error:String?
     @Published var rendererReady=false
-    @Published var paused=false
-    @Published var reduceMotion=false
+    @Published var paused=false {didSet {syncMotion()}}
+    @Published var reduceMotion=false {didSet {syncMotion()}}
+    @Published var ringTiltEnabled=true {didSet {defaults?.set(ringTiltEnabled,forKey:"tamor.ringTilt");syncMotion()}}
     @Published var preview:Set<String>=[]
     @Published var hidden:Set<String>=[]
     @Published var game:JewelMiniSession?
@@ -36,7 +38,15 @@ import simd
     let writer:JewelDiskWriter
     private var blocked=false
     private var defaults:UserDefaults?
-    private var returnAngle:Double=0
+    private var motion:CMMotionManager?
+    private var motionVisible=false
+    private var motionReference:SIMD2<Double>?
+    private(set) var ringTilt:SIMD2<Float> = .zero
+    private var inspectionOrientation=matrix_identity_float4x4
+    private var inspectionTilt:SIMD2<Float> = .zero
+    private var inspectionPhase:Double=0
+    private(set) var returningToRing=false
+    var inspectionSettled:Bool {inspecting && !returningToRing && inspectionPhase>=1}
     private var dirty=false
     var ringAngle:Double=0
     var velocity:Double=0
@@ -79,6 +89,7 @@ import simd
         quality=QualityPreference(rawValue:defaults?.string(forKey:"tamor.quality") ?? "") ?? .automatic
         rayTracing=defaults?.bool(forKey:"tamor.rt") ?? false
         windowLightMotion=defaults?.object(forKey:"tamor.windowLightMotion") as? Bool ?? true
+        ringTiltEnabled=defaults?.object(forKey:"tamor.ringTilt") as? Bool ?? true
         do { let (s,recovered)=try files.load();save=s;ringAngle=s.rotation
             selected=JewelKind.worldOne.first(where:{$0.key==s.selectedID})?.rawValue ?? 0
             if recovered { saveMessage=L("バックアップから復元しました。") }
@@ -92,7 +103,64 @@ import simd
     func position(_ jewel:JewelKind)->SIMD2<Double> {
         RingLayoutMath.position(index:save.slots[jewel.key] ?? jewel.slot,count:12,angle:ringAngle)
     }
+    var displayedJewels:[JewelKind] {inspectionProgress>=1 ? visible.filter{$0==kind}:visible}
+    var displayedTilt:SIMD2<Float> {inspecting ? inspectionTilt:ringTilt}
+    func gemVisibility(_ jewel:JewelKind)->Float {jewel==kind ? 1:Float(pow(1-inspectionProgress,2))}
+    func displayPosition(_ jewel:JewelKind)->SIMD2<Double> {
+        let p=RingTiltMath.project(position(jewel),tilt:displayedTilt)
+        return inspecting && jewel==kind ? p*(1-inspectionProgress):p
+    }
+    var ringOrientation:simd_float4x4 {
+        JewelMatrices.rotate(-0.38,.init(1,0,0))*JewelMatrices.rotate(Float(reduceMotion ? 0:sin(time*0.25)*0.12)+0.18,.init(0,1,0))
+    }
+    func gemModel(_ jewel:JewelKind)->simd_float4x4 {
+        let size=Float(GemScale.width(centicarats:weight(jewel))/375)
+        let scale=JewelMatrices.scale(.init(repeating:size))
+        if inspecting {
+            let p=position(jewel)
+            var location=RingTiltMath.transform(inspectionTilt)*SIMD4<Float>(Float(p.x),Float(p.y),0,0)
+            let amount=jewel==kind ? Float(inspectionProgress):0
+            location *= 1-amount
+            let rotation=jewel==kind ? JewelMatrices.rotate(pitch*amount,.init(1,0,0))*JewelMatrices.rotate(yaw*amount,.init(0,1,0)):matrix_identity_float4x4
+            return JewelMatrices.translate(.init(location.x,location.y,location.z))*rotation*inspectionOrientation*scale
+        }
+        let p=position(jewel)
+        return RingTiltMath.transform(ringTilt)*JewelMatrices.translate(.init(Float(p.x),Float(p.y),0))*ringOrientation*scale
+    }
+    func rotateInspection(yaw:Float,pitch:Float) {
+        guard inspectionSettled,!paused,yaw.isFinite,pitch.isFinite else {return}
+        self.yaw=Float(RingLayoutMath.wrapped(Double(yaw)))
+        self.pitch=Float(RingLayoutMath.wrapped(Double(pitch)))
+    }
+    func setMotionVisible(_ visible:Bool) {motionVisible=visible;syncMotion()}
+    private func syncMotion() {
+        var enabled=motionVisible && !paused && !reduceMotion && ringTiltEnabled && !inspecting
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("--ui-test") {enabled=false}
+        #endif
+        if enabled {
+            if motion==nil {motion=CMMotionManager()}
+            guard let motion,motion.isDeviceMotionAvailable else {return}
+            if !motion.isDeviceMotionActive {
+                motionReference=nil;motion.deviceMotionUpdateInterval=1.0/30
+                motion.startDeviceMotionUpdates(using:.xArbitraryZVertical)
+            }
+        } else {
+            motion?.stopDeviceMotionUpdates();motionReference=nil
+            if !inspecting {ringTilt = .zero}
+        }
+    }
+    private func updateTilt(_ dt:Double) {
+        guard let sample=motion?.deviceMotion,motion?.isDeviceMotionActive==true,
+              let angles=RingTiltMath.angles(gravity:.init(sample.gravity.x,sample.gravity.y,sample.gravity.z)) else {return}
+        if motionReference==nil {motionReference=angles}
+        guard let reference=motionReference else {return}
+        let target=RingTiltMath.relative(angles,to:reference)
+        ringTilt+=(target-ringTilt)*Float(1-exp(-dt*10))
+    }
     func hit(_ p:SIMD2<Double>)->JewelKind? {
+        guard !inspecting else {return nil}
+        let p=RingTiltMath.unproject(p,tilt:ringTilt)
         guard simd_length(p)>0.35 else { return nil }
         guard simd_length(p)<0.94 else { return nil }
         let nearest=(0..<12).min { simd_distance(p,RingLayoutMath.position(index:$0,count:12,angle:ringAngle)) < simd_distance(p,RingLayoutMath.position(index:$1,count:12,angle:ringAngle)) }!
@@ -100,19 +168,33 @@ import simd
     }
     func activate(_ index:Int) {
         guard let jewel=JewelKind(rawValue:index),rendererReady,!paused else { return }
+        if inspecting {if jewel==kind {back()};return}
         if visible.contains(jewel) { inspect(index) } else { startGame(jewel) }
     }
     func inspect(_ index:Int) {
-        guard rendererReady,!paused,let jewel=JewelKind(rawValue:index),visible.contains(jewel) else { return }
-        returnAngle=ringAngle;selected=index;velocity=0;snap=nil;dragging=false
-        dirty=false;zoom=0;renderedZoom=0;yaw=0.25;pitch = -0.3;inspecting=true
+        guard rendererReady,!paused,!inspecting,let jewel=JewelKind(rawValue:index),visible.contains(jewel) else { return }
+        inspectionTilt=ringTilt
+        inspectionOrientation=RingTiltMath.transform(ringTilt)*ringOrientation
+        selected=index;velocity=0;snap=nil;dragging=false
+        dirty=false;zoom=0;renderedZoom=0;yaw=0;pitch=0;returningToRing=false
+        inspectionPhase=reduceMotion ? 1:0;inspectionProgress=inspectionPhase;inspecting=true
+        syncMotion()
         persist()
     }
-    func back() { dirty=false;inspecting=false;velocity=0;snap=nil;dragging=false;persist() }
+    func back() {
+        guard inspecting,!returningToRing else {return}
+        dirty=false;velocity=0;snap=nil;dragging=false;returningToRing=true
+        if reduceMotion || inspectionPhase==0 {finishInspection()}
+    }
+    private func finishInspection() {
+        inspectionPhase=0;inspectionProgress=0;returningToRing=false;inspecting=false
+        syncMotion();persist()
+    }
     func selectNext(_ delta:Int) {
-        let list=visible;guard !list.isEmpty else { return }
+        let list=visible;guard !list.isEmpty,(!inspecting || inspectionSettled) else { return }
         let i=list.firstIndex(of:kind) ?? 0
         selected=list[(i+delta+list.count)%list.count].rawValue
+        if inspecting {yaw=0;pitch=0;persist();return}
         let target = -Double(save.slots[kind.key] ?? kind.slot)*2 * .pi/12
         snap=ringAngle+RingLayoutMath.wrapped(target-ringAngle);velocity=0;dirty=true
         if reduceMotion { ringAngle=snap!;snap=nil;persist();dirty=false }
@@ -127,11 +209,12 @@ import simd
     func setVisible(_ jewel:JewelKind,_ yes:Bool) {
         #if DEBUG
         if yes { hidden.remove(jewel.key);preview.insert(jewel.key) } else { preview.remove(jewel.key);hidden.insert(jewel.key) }
+        if inspecting && !visible.contains(kind) {back()}
         if !visible.contains(kind) { selected=visible.first?.rawValue ?? 0 }
         defaults?.set(Array(preview),forKey:"jewel.preview");defaults?.set(Array(hidden),forKey:"jewel.hidden")
         #endif
     }
-    func normalVisibility() { preview=[];hidden=[];selected=visible.first?.rawValue ?? 0;defaults?.removeObject(forKey:"jewel.preview");defaults?.removeObject(forKey:"jewel.hidden") }
+    func normalVisibility() { if inspecting {back()};preview=[];hidden=[];selected=visible.first?.rawValue ?? 0;defaults?.removeObject(forKey:"jewel.preview");defaults?.removeObject(forKey:"jewel.hidden") }
     func persist() {
         guard !blocked,!savingReward else { return }
         save.rotation=ringAngle;save.selectedID=kind.key;save.revision+=1
@@ -144,7 +227,7 @@ import simd
         // Recover an interrupted batch before accepting a different depth; never overwrite it.
         let depth = jewel.game == .crusher ? (CrusherSession.pendingDepth(files:files) ?? min(selectedDepth,save.unlockedDepth(jewel.key))) : min(selectedDepth,save.unlockedDepth(jewel.key))
         if depth>3 && !fullDepthAccess {paywallRequested=true;return}
-        if inspecting {back()}
+        if inspecting {finishInspection()}
         selected=jewel.rawValue;persist()
         if jewel.game == .crusher {
             crusher=CrusherSession(depth:depth,files:files,quality:quality)
@@ -208,10 +291,17 @@ import simd
     }
     func tick(_ rawDT:Double) {
         guard !paused else { return }
-        let dt=min(0.04,max(0,rawDT));time+=dt
-        let goal=0.0
-        inspectionProgress += (goal-inspectionProgress)*min(1,dt*(reduceMotion ? 30:8))
-        if abs(inspectionProgress-goal)<0.0001 { inspectionProgress=goal }
+        let dt=min(0.04,max(0,rawDT))
+        if inspecting {
+            inspectionPhase=reduceMotion ? (returningToRing ? 0:1):min(1,max(0,inspectionPhase+dt/0.7*(returningToRing ? -1:1)))
+            // Quintic easing has zero velocity and acceleration at both endpoints.
+            let t=inspectionPhase
+            inspectionProgress=t*t*t*(t*(t*6-15)+10)
+            if returningToRing && inspectionPhase==0 {finishInspection()}
+            return
+        }
+        time+=dt
+        updateTilt(dt)
         renderedZoom += (zoom-renderedZoom)*min(1,dt*12)
         guard !dragging,inspectionProgress<0.001 else { return }
         if let target=snap {

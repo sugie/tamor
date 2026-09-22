@@ -5,12 +5,14 @@
 ## A. 「App Review に関する情報 > メモ」欄に貼る英文案(4,000 バイト以内)
 
 ```
-Tamor is a single-player gem-collecting game for iPhone and iPad. No account or login is required, so no demo account is provided.
+Tamor is a single-player gem-collecting game designed for iPhone running iOS 26.0 or later. No account or login is required, so no demo account is provided.
 
 HOW TO PLAY
 - Launch the app. From the ring screen, tap "Choose Gem & Depth" (or tap an empty named pedestal) and pick a gem and Depth 1.
 - Each of the four gems has its own mini-game: Diamond = Glass Break (tap red dots in time), Ruby = Glass Trace (follow the green dot), Sapphire = Kurukuru World (tap pairs spinning the same way), Obsidian = Crusher Room (break as many glass plates as possible in 10 seconds).
 - Clearing a depth awards a gem whose carat weight depends on the result, and opens the next depth for that gem.
+- Tap a collected gem on the ring to bring it into a central spotlight at the same scale. Swipe to rotate it. Single-tap the gem (or tap "Back to Ring") to animate it back to its original ring position.
+- Tilt the device to tilt the ring. This effect can be disabled in Settings and is disabled when Reduce Motion is on. Motion data is processed on-device only and is never stored or transmitted.
 
 IN-APP PURCHASE
 - One non-consumable: "[TO CONFIRM: IAP display name]" (product ID com.marcottlab.tamor.world1.depth).
@@ -28,15 +30,17 @@ WORLD 2
 - The "WORLD 2" page reached with the right arrow shows a "Coming soon" notice only. It contains no playable content, is not sold, and is not part of the World 1 unlock. It is not mentioned as an available feature in the store listing. [TO CONFIRM: see note C-1 below]
 
 OTHER
-- No ads, no third-party analytics, no tracking. The privacy policy is linked in the app at [TO CONFIRM: location] and in the metadata.
-- The app is portrait-only and supports iPhone and iPad. Ray tracing is an optional visual setting on supported GPUs and is off by default.
+- No ads, no third-party analytics, no tracking. The privacy policy is linked in Settings > Support & Legal > Privacy Policy. [TO CONFIRM: App Store Connect metadata and final publication of the policy]
+- The app is portrait-only and designed for iPhone running iOS 26.0 or later. Operation in iPad compatibility mode is not guaranteed. Ray tracing is an optional visual setting on supported GPUs and is off by default.
 - Contact: [TO CONFIRM: name, email, phone for App Review]
 ```
 
 ## B. 日本語での説明(社内確認用。上の英文と同内容)
 
 - アカウント不要のためデモアカウントなし。
+- iOS 26.0 以上の iPhone 向け・縦向き専用。iPad の互換モードでの動作は保証しません。
 - 遊び方: リング画面 →「宝石と深度を選ぶ」→ 宝石と深度1を選択。4種の宝石それぞれにミニゲーム。
+- 獲得済み宝石をタップすると同じ倍率で中央へ移動し、スポットライトで単体表示。スワイプで回転し、宝石のシングルタップまたは「リングに戻る」で逆の演出を経て復帰。端末を傾けるとリングも傾く（設定で無効化可）。モーション情報は端末内の表示にのみ使用し、保存・送信しない。
 - IAP: 非消耗型1点(`com.marcottlab.tamor.world1.depth`)。無料は深度1〜3・最大3.00ct。購入で World 1 の深度4〜6に挑戦可能になる。**宝石そのものは付与されない。20.00ct は前深度のクリアと深度6でのS評価3連続という技能条件が残る**(購入画面に明記済み)。
 - 到達方法: リング画面の「World 1の深度4〜6を解放」。復元は購入画面と設定>購入。
 - サブスク・消耗型・体力・ランダム報酬・ルートボックスなし。
@@ -51,12 +55,12 @@ OTHER
 4. **購入が必要な範囲の明示(2.3.2)。** 掲載文に「深度4〜6はアプリ内課金が必要」と記載(`store-listing.md` に反映済み)。
 5. **価格をスクリーンショット・名前・サブタイトルに入れない(2.3.7)。** 購入画面のスクリーンショットをストア画像に使う場合は価格表示に注意。
 6. **復元手段(3.1.1)。** 実装済み(購入画面・設定)。
-7. **プライバシーポリシーをメタデータとアプリ内の両方に(5.1.1(i))。** **現状のアプリ内にはプライバシーポリシーへのリンクが見当たりません**(設定画面に追加が必要。URL 未確定のため Claude は未実装)。
+7. **プライバシーポリシーをメタデータとアプリ内の両方に(5.1.1(i))。** 設定 > サポートと規約 に日英のプライバシーポリシーへのリンクを追加済み（2026-09-22、Mac側）。App Store ConnectへのURL入力と、リンク先の草案表示解除は残る。
 8. **iCloud 記述の除去。** 現在の設定画面・購入画面・README に iCloud 同期の説明が残っています(「iCloudと宝石の復元」「宝石の復元は設定のiCloud同期から」等)。1.0 で同期しないなら、UI 文言・Entitlements(`Tamor.entitlements` に CloudKit)・審査メモ・掲載文を一致させてください。Codex が対応中と理解しています。
 9. **輸出コンプライアンス。** 通信は HTTPS(OS 標準の暗号)のみと見られ、Apple の説明では免除対象に当たる可能性が高いですが、`ITSAppUsesNonExemptEncryption` の設定と App Store Connect の質問への回答は人間が行ってください(出典11, 12)。
 10. **年齢区分。** ギャンブル・疑似ギャンブル・ルートボックスはいずれも「なし」に該当する内容です(ランダム報酬なし)。新しい質問票への回答は人間が行ってください(出典13)。
 11. **アイコン。** `AppIcon.png` にアルファチャンネルあり。また旧4種の宝石配色のままです(`asset-rights-inventory.md` 参照)。
-12. **iPad。** iPad 対応を維持するなら 13 インチ iPad のスクリーンショットが必須(出典10)。iPad 実機/シミュレーターでのレイアウトは Claude 側では未検証。
+12. **対応端末。** iPhone 専用・iOS 26.0 以上。iPad 用スクリーンショットは不要。iPad での互換モード動作を排除する設定ではありませんが、その動作は保証しません。iPhone 17 世代の実機は未検証。iPad 第8世代（iPadOS 26.7）は互換モードでUIテストと通常起動を確認済み（[検証記録](../ipad-verification-2026-09-22.md)）。iPhone 12 mini の検証状況は `handoff.md` の最新追記を参照。
 13. **サポートURL**は実際の連絡先に到達できるページが必須(出典7)。未確定。
 
 ## D. App Privacy(「Appのプライバシー」)回答案 — 人間が確定してください
