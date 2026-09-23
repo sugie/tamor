@@ -3,7 +3,7 @@ import simd
 
 struct JewelVertex { var position:SIMD4<Float>;var normal:SIMD4<Float> }
 struct JewelInstance { var model:simd_float4x4;var color:SIMD4<Float>;var material:SIMD4<Float> }
-struct JewelFrame { var values:SIMD4<Float>;var dimensions:SIMD4<Float>;var scene:SIMD4<Float> = .zero }
+struct JewelFrame { var values:SIMD4<Float>;var dimensions:SIMD4<Float>;var scene:SIMD4<Float> = .zero;var focus:SIMD4<Float> = .zero }
 struct JewelMesh { let buffer:MTLBuffer;let count:Int }
 
 enum JewelGeometry {

@@ -83,7 +83,7 @@
 		1C1B4CB32672DA13450DC62E /* TamorUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = TamorUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1C403F85B5A151D44F2A4A2C /* CrackMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrackMetrics.swift; sourceTree = "<group>"; };
 		20F31BC6A4625C0A30503039 /* GemTransmissionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GemTransmissionTests.swift; sourceTree = "<group>"; };
-		22D7404A020C6B78B69050F5 /* Tamor.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Tamor.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		22D7404A020C6B78B69050F5 /* Tamor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Tamor.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2CE3C7EA747B88F3CDB14406 /* GameRules.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameRules.swift; sourceTree = "<group>"; };
 		2F6137DD258DC12395116DAD /* JewelMetalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JewelMetalView.swift; sourceTree = "<group>"; };
 		33B3F411316CF64BAA591E61 /* JewelShaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = JewelShaders.metal; sourceTree = "<group>"; };
@@ -111,7 +111,7 @@
 		BF5445E524BCF5CA54248A47 /* JewelGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JewelGeometry.swift; sourceTree = "<group>"; };
 		C12319FB07BA54C6770EAF60 /* PurchaseStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseStore.swift; sourceTree = "<group>"; };
 		C1EA09E335AD7C14A39CB40F /* GlassFragmentEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassFragmentEngine.swift; sourceTree = "<group>"; };
-		C6FA09C4A857BADF5BF684F0 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		C6FA09C4A857BADF5BF684F0 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		CBC63F1437B33E8C478F3F61 /* MiniGameScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiniGameScreen.swift; sourceTree = "<group>"; };
 		E0F67C170EFCF90512E9C45F /* JewelSceneTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JewelSceneTests.swift; sourceTree = "<group>"; };
 		E54A94FE3F31D91E9648550A /* GlassBreakGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassBreakGeometry.swift; sourceTree = "<group>"; };
@@ -331,6 +331,7 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					038A7940CDA2C140386A2C07 = {
+						DevelopmentTeam = PP7EWEKNZZ;
 						ProvisioningStyle = Automatic;
 					};
 					64C861822FAC799163CBD643 = {
@@ -464,7 +465,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 7;
+				DEVELOPMENT_TEAM = PP7EWEKNZZ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Config/Info.plist;
 				INFOPLIST_KEY_CADisableMinimumFrameDurationOnPhone = YES;
@@ -472,7 +474,6 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIRequiresFullScreen = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -482,7 +483,7 @@
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) TAMOR";
 				TAMOR_REVENUECAT_API_KEY = appl_ZPpfsovAUxVIyOMjIbniRmIXlaO;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
@@ -491,7 +492,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 7;
+				DEVELOPMENT_TEAM = PP7EWEKNZZ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Config/Info.plist;
 				INFOPLIST_KEY_CADisableMinimumFrameDurationOnPhone = YES;
@@ -499,7 +501,6 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIRequiresFullScreen = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -509,7 +510,7 @@
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG TAMOR";
 				TAMOR_REVENUECAT_API_KEY = appl_ZPpfsovAUxVIyOMjIbniRmIXlaO;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -559,7 +560,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -567,7 +568,7 @@
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
@@ -623,7 +624,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -632,7 +633,7 @@
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -648,7 +649,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.marcottlab.TamorUITests;
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				TEST_TARGET_NAME = Tamor;
 			};
 			name = Debug;
@@ -665,7 +666,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.marcottlab.TamorUITests;
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				TEST_TARGET_NAME = Tamor;
 			};
 			name = Release;
@@ -682,7 +683,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.marcottlab.TamorTests;
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Tamor.app/Tamor";
 			};
 			name = Debug;
@@ -699,7 +700,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.marcottlab.TamorTests;
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Tamor.app/Tamor";
 			};
 			name = Release;

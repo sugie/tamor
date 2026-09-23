@@ -57,10 +57,10 @@ import MetalKit
         let color=try XCTUnwrap(device.makeTexture(descriptor:descriptor))
         descriptor.pixelFormat = .depth32Float
         let depthTexture=try XCTUnwrap(device.makeTexture(descriptor:descriptor))
-        func render(time:Float,withGem:Bool,visibility:Float=1)throws->[UInt8] {
-            instance.material.z=visibility
+        func render(time:Float,withGem:Bool,visibility:Float=1,focus:Float=0)throws->[UInt8] {
+            instance.material.z=visibility;instance.material.w = -focus
             withUnsafeBytes(of:&instance) {memcpy(buffer.contents(),$0.baseAddress!,$0.count)}
-            var frame=JewelFrame(values:.init(0,1,0,0),dimensions:.init(128,128,0,0),scene:.init(0,time,0,0))
+            var frame=JewelFrame(values:.init(0,focus,0,0),dimensions:.init(128,128,0,0),scene:.init(0,time,0,0))
             let command=try XCTUnwrap(queue.makeCommandBuffer())
             try backs.encode(command:command,size:.init(width:128,height:128),frame:frame,buffer:buffer,draws:[(mesh,1,0)])
             let pass=MTLRenderPassDescriptor();pass.colorAttachments[0].texture=color;pass.colorAttachments[0].loadAction = .clear;pass.colorAttachments[0].storeAction = .store
@@ -90,6 +90,12 @@ import MetalKit
         XCTAssertGreaterThan(refracted,center.count/4,"Gem pixels cannot simply show the unrefracted backdrop")
         XCTAssertGreaterThan(center.filter {abs(Int(stone[$0])-Int(shifted[$0]))>1}.count,30,"Moving light must also change the gem")
         XCTAssertEqual(stone,still,"A frozen light clock must produce a stable image")
+        let stage=try render(time:0,withGem:false,focus:1)
+        let litGem=try render(time:0,withGem:true,focus:1)
+        let corner=(100..<116).flatMap {y in (100..<116).map {x in (y*128+x)*4+1}}
+        XCTAssertLessThan(corner.reduce(0){$0+Int(stage[$1])},corner.reduce(0){$0+Int(wall[$1])}/2,"The surroundings must dim when the spotlight rises")
+        XCTAssertGreaterThan(Int(stage[(64*128+64)*4+1]),Int(stage[(64*128+112)*4+1])+35,"The chosen gem must have a distinct pool of light")
+        XCTAssertGreaterThan(center.filter {abs(Int(litGem[$0])-Int(stage[$0]))>12}.count,center.count/4,"The focused gem must remain visible against the stage")
         let hidden=try render(time:0,withGem:true,visibility:0)
         XCTAssertEqual(hidden,wall,"Fully faded gems must not leave dither dots against the bright window")
     }

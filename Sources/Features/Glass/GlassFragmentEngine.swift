@@ -37,7 +37,10 @@ final class GlassFragmentEngine {
         #else
         hardware=device.supportsRaytracing && !forceSoftware
         #endif
-        pipeline=try device.makeComputePipelineState(function:library.makeFunction(name:hardware ? "glassFragmentsHardware":"glassFragmentsSoftware")!)
+        guard let function=library.makeFunction(name:hardware ? "glassFragmentsHardware":"glassFragmentsSoftware") else {
+            throw GlassRayEngine.failure("ガラスの破片の描画に必要な Metal 機能を準備できませんでした。")
+        }
+        pipeline=try device.makeComputePipelineState(function:function)
         var ts:[GlassRayTriangle]=[],ns:[GlassRayNode]=[]
         for f in snapshot.geometry.fragments {
             let scene=GlassRayScene(triangles:f.triangles),to=UInt32(ts.count),no=UInt32(ns.count)

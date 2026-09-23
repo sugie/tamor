@@ -22,5 +22,12 @@
 	<false/>
 	<key>RevenueCatAPIKey</key>
 	<string>$(TAMOR_REVENUECAT_API_KEY)</string>
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>arm64</string>
+		<string>metal</string>
+	</array>
+	<key>NSMotionUsageDescription</key>
+	<string>Tamor uses device tilt to animate the jewel ring. Motion data is not saved or sent.</string>
 </dict>
 </plist>

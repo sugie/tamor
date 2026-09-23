@@ -43,7 +43,7 @@ Tamor は、短いミニゲームの腕前で宝石を手に入れ、12の台座
 
 ■ ご注意
 ・このバージョンにはクラウド保存・端末間の同期機能がありません。アプリを削除したり端末を替えたりすると、集めた宝石は引き継がれません(「購入を復元」で戻るのは深度4〜6の解放だけです)。
-・縦向き専用。iPhone と iPad に対応。【要確認: iPad 検証結果しだいで記載を見直し】
+・縦向き専用。iOS 26.0 以上の iPhone 向けです。iPad の互換モードでの動作は保証しません。
 
 プライバシーポリシー:【要確認: URL】
 サポート:【要確認: URL / 連絡先】
@@ -98,7 +98,7 @@ The download and Depths 1–3 (gems up to 3.00 ct) are free. Playing Depths 4–
 
 PLEASE NOTE
 • This version has no cloud save or sync between devices. If you delete the app or change devices, your collected gems do not carry over. Restore Purchases brings back the Depths 4–6 unlock only.
-• Portrait only. For iPhone and iPad. [TO CONFIRM after iPad verification]
+• Portrait only. Designed for iPhone running iOS 26.0 or later. Operation in iPad compatibility mode is not guaranteed.
 
 Privacy Policy: [TO CONFIRM: URL]
 Support: [TO CONFIRM: URL / contact]
@@ -115,5 +115,5 @@ gem,jewel,collect,glass,break,reflex,mini games,diamond,ruby,sapphire,obsidian,c
 
 - 「広告なし」「アカウント不要」「端末内のみ保存」は 1.0 の公開ビルドがその通りであることが前提です。Codex の CloudKit 除外作業の完了後に再確認してください。
 - 「クラウド保存なし」の注意書きは任意ですが、購入の復元と宝石の復元を利用者が混同しないよう、あえて入れています。
-- スクリーンショットは実際のプレイ画面から作成してください(2.3.3)。必要サイズ: iPhone 6.9"(1320×2868 等)、iPad 13"(2064×2752 等)。出典10。
+- スクリーンショットは実際のプレイ画面から作成してください(2.3.3)。iPhone 用の必要サイズ(6.9"、1320×2868 等)を用意します。iPhone 専用のため iPad 用スクリーンショットは不要です。出典10。
 - 英語サブタイトル等で "Kurukuru World" をそのままゲーム名として使っています(アプリ内英語表記と一致)。

@@ -95,6 +95,9 @@ import simd
             windowTime+=Float(min(0.1,max(0,dt)))
         }
         frame.scene.y=windowTime
+        frame.scene.z=state.displayedTilt.x;frame.scene.w=state.displayedTilt.y
+        let focus=state.displayPosition(state.kind)
+        frame.focus = .init(Float(focus.x),Float(focus.y),0,0)
         do {
             try backSurface.encode(command:command,size:view.drawableSize,frame:frame,buffer:buffer,draws:groups.gems.enumerated().map{(gems[Int($0.element.material.y)],1,$0.offset)})
         } catch {state.error=L("宝石の透過描画を準備できませんでした。");return}
@@ -139,13 +142,10 @@ import simd
     }
     private func instances() -> (gems:[JewelInstance],atoms:[JewelInstance],bonds:[JewelInstance]) {
         var gems:[JewelInstance]=[],atoms:[JewelInstance]=[],bonds:[JewelInstance]=[]
-        for jewel in state.visible {
-            let p=state.position(jewel)
+        for jewel in state.displayedJewels {
             // Mesh diameter is two model units. NDC diameter two maps to viewport width.
-            let size=Float(GemScale.width(centicarats:state.weight(jewel))/375)
-            let orientation=JewelMatrices.rotate(-0.38,.init(1,0,0))*JewelMatrices.rotate(Float(state.reduceMotion ? 0:sin(state.time*0.25)*0.12)+0.18,.init(0,1,0))
-            let model=JewelMatrices.translate(.init(Float(p.x),Float(p.y),0))*orientation*JewelMatrices.scale(.init(repeating:size))
-            gems.append(.init(model:model,color:SIMD4(jewel.tint,1),material:.init(0,Float(jewel.rawValue),1,0)))
+            let model=state.gemModel(jewel)
+            gems.append(.init(model:model,color:SIMD4(jewel.tint,state.gemVisibility(jewel)),material:.init(0,Float(jewel.rawValue),1,jewel==state.kind ? -Float(state.inspectionProgress):0)))
         }
         return (gems,atoms,bonds)
     }

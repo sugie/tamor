@@ -29,6 +29,9 @@ struct JewelHome:View {
                     if world==1 {
                         ZStack {
                             JewelMetalView(state:state)
+                            if state.inspecting {
+                                VStack {Spacer();HStack {Button {state.back()} label:{Label("リングに戻る",systemImage:"chevron.left").font(.caption).padding(12).background(jewelBackground.opacity(0.9),in:Capsule())}.accessibilityIdentifier("inspector.back");Spacer()}}.padding(12)
+                            }
                             if state.count==0 {VStack(spacing:8){Image(systemName:"sparkles").font(.title);Text("最初の宝石を見つけよう").font(.footnote);Text("名前のある台座からプレイ").font(.caption)}.padding().background(jewelBackground.opacity(0.8),in:RoundedRectangle(cornerRadius:14)).allowsHitTesting(false).accessibilityIdentifier("ring.empty")}
                             if let error=state.error {Text(L(error)).font(.footnote).padding()}
                         }.frame(width:min(geo.size.width,480),height:min(geo.size.width,480))
@@ -88,11 +91,11 @@ struct JewelHome:View {
                     Spacer();Button{state.selectNext(1)}label:{Image(systemName:"chevron.right").frame(width:44,height:44)}.accessibilityIdentifier("ring.next")
                 }
                 if state.inspecting {
-                    HStack{Text(L(state.kind.composition)).font(.caption);Spacer();Button("情報を閉じる"){state.back()}.font(.caption).accessibilityIdentifier("inspector.back")}
-                    Text("最大の1個をリングに表示しています。小さな宝石も宝石箱に残ります。").font(.caption).foregroundStyle(.secondary)
+                    Text(L(state.kind.composition)).font(.caption)
+                    Text("リングと同じ大きさで表示しています。スワイプで回転、宝石をタップでリングに戻ります。").font(.caption).foregroundStyle(.secondary)
                 }
                 Button {state.startGame(state.kind)} label:{goldButton(String(format:L("%@をプレイ"),L(state.kind.game.title)),icon:"play.fill")}.accessibilityIdentifier("ring.play")
-                Text("スワイプで回転 · タップで情報 · ダブルタップでプレイ").font(.caption2).foregroundStyle(.secondary)
+                Text(L(state.inspecting ? "スワイプで回転 · 宝石をタップでリングに戻る":"スワイプでリングを回転 · タップで宝石を中央に表示")).font(.caption2).foregroundStyle(.secondary)
             }
             Button{games=true}label:{goldButton(L("宝石と深度を選ぶ"),icon:"square.grid.2x2")}.accessibilityIdentifier("ring.games")
             Button{inventory=true}label:{goldButton(String(format:L("宝石箱 · %lld 個"),state.collectionCount),icon:"shippingbox")}.accessibilityIdentifier("ring.inventory")
@@ -122,10 +125,16 @@ struct JewelHome:View {
             }}.navigationTitle("宝石と深度").toolbar{Button("閉じる"){games=false}}
         }.tint(jewelGold)
     }
+    private func supportURL(_ page:String)->URL {
+        let prefix=Bundle.main.preferredLocalizations.first=="ja" ? "":"en/"
+        return URL(string:"https://marcottlab.com/"+prefix+"apps/tamor/"+page)!
+    }
     private var settingsView:some View {
         NavigationStack {Form {
             Section("描画") {
                 Toggle("窓の光を動かす",isOn:$state.windowLightMotion).accessibilityIdentifier("settings.windowMotion")
+                Toggle("端末の傾きにリングを合わせる",isOn:$state.ringTiltEnabled).accessibilityIdentifier("settings.ringTilt")
+                Text("傾きは画面表示にだけ使い、保存・送信しません。「視差効果を減らす」がオンの場合は動きません。").font(.caption)
                 Toggle("レイトレーシング",isOn:$state.rayTracing).disabled(!state.rayAvailable).accessibilityIdentifier("settings.rayTracing")
                 Text(L(state.rayStatus)).font(.caption)
                 Text("対応GPUではリングで選択中の1個に適用します。低電力・高温時は通常描画になります。").font(.caption)
@@ -140,6 +149,11 @@ struct JewelHome:View {
                 Button("購入を復元"){Task{await purchases.restore()}}.disabled(purchases.busy || !purchases.configured)
                 if let message=purchases.message {Text(L(message)).font(.caption)}
                 Text("購入の復元でWorld 1の解放を戻せます。宝石やプレイ記録は復元されません。").font(.caption)
+            }
+            Section("サポートと規約") {
+                Link("プライバシーポリシー",destination:supportURL("privacy.html")).accessibilityIdentifier("settings.privacy")
+                Link("利用規約",destination:supportURL("terms.html")).accessibilityIdentifier("settings.terms")
+                Link("サポート・お問い合わせ",destination:supportURL("")).accessibilityIdentifier("settings.support")
             }
             #if DEBUG
             Section("開発用表示") {

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tamor 対応端末・OS限定 調査と実行計画</title>
+<style>
+:root{--bg:#fbfaf7;--fg:#1e2126;--muted:#5d6470;--line:#d9d5cc;--accent:#8a6d3b;--ok:#2f6f4e;--warn:#9a5b12;--ng:#a63d3d;--soft:#f1ede4}
+@media(prefers-color-scheme:dark){:root{--bg:#15171b;--fg:#e8e6e0;--muted:#a3a7ae;--line:#3a3e45;--accent:#d2b17a;--ok:#7fc79f;--warn:#e0a45a;--ng:#e08383;--soft:#1f2227}}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.7 -apple-system,"Hiragino Sans","Noto Sans JP",sans-serif}
+main{max-width:920px;margin:0 auto;padding:32px 16px 64px}
+h1{font-size:24px;font-weight:600;margin:0 0 4px}h2{font-size:19px;margin:36px 0 10px;border-bottom:1px solid var(--line);padding-bottom:4px}h3{font-size:16px;margin:22px 0 6px}
+.meta{color:var(--muted);font-size:13px}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:14px}th,td{border:1px solid var(--line);padding:6px 8px;vertical-align:top;text-align:left}th{background:var(--soft)}
+code{font:13px ui-monospace,Menlo,monospace;background:var(--soft);padding:1px 4px;border-radius:3px}
+.v{display:inline-block;padding:1px 8px;border-radius:10px;font-size:13px;font-weight:600;color:#fff}.ok{background:var(--ok)}.part{background:var(--warn)}.ng{background:var(--ng)}
+.box{border:1px solid var(--line);border-left:4px solid var(--accent);background:var(--soft);padding:10px 14px;margin:12px 0}
+ul,ol{padding-left:22px}li{margin:3px 0}
+a{color:var(--accent)}
+</style>
+</head>
+<body><main>
+<h1>Tamor 対応端末・OS限定 調査と実行計画</h1>
+<p class="meta">2026-09-22 Claude 作成。調査と計画のみ。コード・設定・ビルド成果物は変更していません。Xcode・Simulator は起動していません。対象プロジェクト: <code>/Users/tsugie/opt/tamor</code>(<code>Tamor.xcodeproj</code>、<code>project.yml</code>、Bundle ID <code>com.marcottlab.tamor</code>)。<code>break-grass</code> は Tamor の素材元の実験リポジトリで、Tamor 本体は含まれません(<code>docs/PROVENANCE.md</code>)。</p>
+
+<h2>1. 結論(可能 / 一部可能 / 不可)</h2>
+<table>
+<tr><th style="width:38%">希望</th><th style="width:12%">判定</th><th>理由</th></tr>
+<tr><td>iPad を配布対象から外す</td><td><span class="v part">一部可能</span></td><td><code>TARGETED_DEVICE_FAMILY=1</code>(iPhone 専用)にしても、iPhone 用アプリは iPad に互換モードでインストール・実行できます。App Store で iPad への配布そのものを止める公式の手段はありません(<code>healthkit</code> 等の機能要件を「iPad を外す目的だけ」で付けるのは不正確な設定なので提案しません)。iPad 用の画面最適化・スクリーンショット・審査上の iPad 対応表明は不要になります。</td></tr>
+<tr><td>iPhone 17 だけに限定する</td><td><span class="v ng">不可</span></td><td>App Store の配布制限は「最低 OS」「デバイスファミリー」「必要機能(<code>UIRequiredDeviceCapabilities</code>)」だけで、機種名・世代を指定する仕組みはありません。iOS 27 でも iPhone 11 以降が対応しているため、最低 OS でも絞れません。</td></tr>
+<tr><td>特定世代以降に限定する</td><td><span class="v part">一部可能</span></td><td>機能要件 <code>iphone-performance-gaming-tier</code>(「iPhone 15 Pro / 15 Pro Max 相当のグラフィックス性能とゲーム機能」)を付けると、iPhone 15 Pro 相当以降(A17 Pro / A18 / A19 系。iPhone 17 世代の全モデルを含む)だけがインストール可能になります。ただし手元の実機 iPhone 12 mini は対象外になり、検証できなくなります。一段緩い <code>iphone-ipad-minimum-performance-a12</code> は現在の最低 iOS 17 と実質同じ範囲です。</td></tr>
+<tr><td>GPU 性能不足の端末を除く</td><td><span class="v part">一部可能</span></td><td>「性能不足」を直接指定する要件はありません。上の gaming-tier か、最低 OS を iOS 26 に上げる(iPhone 11 以降 = A13 以降に限定され、Metal レイトレーシング API 対応 GPU 家族 Apple6 以降で揃う)のどちらか、または両方です。</td></tr>
+</table>
+
+<h2>2. 現状の設定と機能要件(コードから確認)</h2>
+<table>
+<tr><th>項目</th><th>現状</th><th>根拠</th></tr>
+<tr><td>最低 iOS</td><td>17.0</td><td><code>project.yml</code> deploymentTarget、<code>project.pbxproj</code> <code>IPHONEOS_DEPLOYMENT_TARGET = 17.0</code></td></tr>
+<tr><td>デバイスファミリー</td><td>iPhone + iPad(<code>TARGETED_DEVICE_FAMILY = "1,2"</code>)、縦向き固定、<code>UIRequiresFullScreen</code></td><td>同上</td></tr>
+<tr><td><code>UIRequiredDeviceCapabilities</code></td><td>未設定(<code>Config/Info.plist</code> に無し。Xcode が自動で加える値の有無は生成物を見ないと不明)</td><td><code>Config/Info.plist</code></td></tr>
+<tr><td>Metal 基本描画</td><td>リング・ミニゲーム・ガラスは通常のレンダー/コンピュートパイプライン。<code>MTLCreateSystemDefaultDevice()</code> が nil でも throw → 画面にエラー文を表示(クラッシュしない)</td><td><code>JewelRenderer.swift:30</code>、<code>MiniGameMetalView.swift:107</code>、<code>GlassStudyRenderer.swift:179-201</code></td></tr>
+<tr><td>Metal レイトレーシング(ガラス)</td><td><code>device.supportsRaytracing</code> が true なら <code>glassTraceHardware</code>/<code>glassFragmentsHardware</code>(加速構造体 + <code>intersector</code>)、false ならソフトウェア版カーネル。両経路とも同じ結果を目指す設計で、常時使用(オプションではない)</td><td><code>GlassRayEngine.swift:37-49</code>、<code>GlassFragmentEngine.swift:38-40</code>、<code>GlassRayTracing.metal</code>、<code>GlassFragmentShaders.metal</code></td></tr>
+<tr><td>Metal レイトレーシング(宝石、任意)</td><td><code>supportsRaytracingFromRender && supportsFamily(.apple9)</code>(A17 Pro / A18 / M3 以降)のときだけ準備し、失敗時は通常描画へ。設定で ON/OFF、既定 OFF</td><td><code>JewelRenderer.swift:61-71</code></td></tr>
+<tr><td>起動時の判定</td><td>GPU 家族・メモリ量・機種の判定は無し。品質は実測フレーム時間・熱・省電力から段階調整(<code>RenderQualityPolicy</code>)</td><td><code>RenderQuality.swift</code></td></tr>
+<tr><td>配布状況</td><td>App Store 未公開。TestFlight へ 1.0(5) をアップロード済み(Apple 側処理・外部テスト承認は未確認)。既存の実機は iPhone 12 mini(A14)1台</td><td><code>docs/release/device-testflight-2026-09-22.md</code></td></tr>
+</table>
+
+<h2>3. Apple 公式資料に基づく制限手段の整理</h2>
+<table>
+<tr><th style="width:24%">手段</th><th>制限できること</th><th>制限できないこと / 注意</th></tr>
+<tr><td>最低 iOS(<code>IPHONEOS_DEPLOYMENT_TARGET</code>)</td><td>その OS を入れられない端末を除外。iOS 26 / iOS 27 はどちらも iPhone 11 以降・iPhone SE(第2世代)以降が対応 [3][4]。iOS 26 以上にすると A12(iPhone XS/XR)が外れ、全端末が A13 以降 = GPU 家族 Apple6 以降(Metal レイトレーシング API 対応)[7][8]</td><td>iPhone 11〜17 の間を切り分けることはできない</td></tr>
+<tr><td><code>TARGETED_DEVICE_FAMILY</code>(UIDeviceFamily)</td><td>iPhone 専用アプリとして扱われ、iPad 向けレイアウト・スクリーンショットが不要に</td><td>iPad への配布は止まらない(互換モードで動作)。visionOS 互換も同様</td></tr>
+<tr><td><code>UIRequiredDeviceCapabilities</code></td><td>「App Store は、必要機能をサポートしない端末へのインストールを防ぐ」[1]。使える値の例: <code>arm64</code>、<code>metal</code>、<code>iphone-ipad-minimum-performance-a12</code>、<code>iphone-performance-gaming-tier</code>(iPhone 15 Pro 相当以上、iOS 17 以降)[1][2]</td><td>「アップデートでは要件を維持または緩和することしかできない。要件を追加すると既存ユーザーが更新できなくなる」[1]。機種名は指定不可。gaming-tier が iPad(M1 以降)にどう作用するかは公式文書に明記がなく、開発者フォーラムの報告のみ(未確認扱い)[9][10]。「どの端末が対象になるかを事前に確認する公式手段はない」との Apple DTS 回答あり [10]</td></tr>
+<tr><td>Metal の機能要件(コード内)</td><td>インストール後の判定のみ。<code>supportsFamily</code>・<code>supportsRaytracing</code> で経路を切り替え、非対応なら案内表示</td><td>インストール前の制限にはならない。App Store には「Metal 3 必須」のような細かい指定は無い(<code>metal</code> は Metal 対応の有無だけ)</td></tr>
+</table>
+<div class="box"><strong>インストール前とインストール後の区別:</strong> 最低 OS・ファミリー・必要機能はストアが判定し、非対応端末には表示・インストールされません。GPU 家族やメモリの判定はアプリ内でしかできず、非対応時は「案内を出して機能を落とす」対応になります。</div>
+
+<h3>「iPhone 17 標準モデルだけ」と「iPhone 17 世代の各モデル」の違い</h3>
+<table>
+<tr><th>モデル</th><th>チップ(Apple 仕様ページ)</th><th>App Store での区別</th></tr>
+<tr><td>iPhone 17</td><td>A19、5 コア GPU、ハードウェアレイトレーシング [5]</td><td rowspan="4">4 機種を区別する手段はありません。すべて iOS 26 以降、<code>iphone-performance-gaming-tier</code> を満たします。「iPhone 17 だけ」は実現できず、実現できる最小単位は「iPhone 15 Pro 相当以降」です。GPU コア数・メモリの差はアプリ内判定でも機種名としては取れません(取れるのは GPU 家族と実測性能)。</td></tr>
+<tr><td>iPhone 17 Pro / Pro Max</td><td>A19 Pro(仕様ページ未取得。今回未確認)</td></tr>
+<tr><td>iPhone Air</td><td>A19 Pro(同上、未確認)</td></tr>
+<tr><td>iPhone 17e</td><td>A19、4 コア GPU、ハードウェアレイトレーシング [6]</td></tr>
+</table>
+
+<h2>4. コードから見た起動失敗・クラッシュの具体的リスク</h2>
+<p>いずれも「端末性能が低いから」ではなく、失敗経路の扱いの問題です。性能不足が原因とは確認できていません。</p>
+<table>
+<tr><th style="width:34%">箇所</th><th>内容</th><th>影響</th></tr>
+<tr><td><code>MiniGameMetalView.swift:121,124</code> <code>makeDepthStencilState(...)!</code>、<code>:126</code> <code>makeBuffer(...)!</code></td><td>強制アンラップ。Metal オブジェクト生成が nil を返すと即クラッシュ(ミニゲーム開始時)。サイズは 3×8192×stride で小さく、通常は失敗しないが、メモリ逼迫時は不明</td><td>クラッシュ。<code>throw</code> に置き換えれば案内表示に変えられる</td></tr>
+<tr><td><code>MiniGameMetalView.swift:107</code></td><td>Metal 初期化失敗時に <code>SaveFailure.unreadable</code> を投げるため、画面には「保存データを読み込めません」と<strong>無関係な文言</strong>が出る</td><td>誤案内(クラッシュではない)</td></tr>
+<tr><td><code>GlassFragmentEngine.swift:40</code> <code>makeFunction(name:)!</code></td><td>シェーダ関数名の解決の強制アンラップ。ビルドに含まれていれば失敗しないが、失敗時はクラッシュ</td><td>低リスク。<code>guard</code> 化が望ましい</td></tr>
+<tr><td>ソフトウェア RT 経路(<code>supportsRaytracing == false</code>、A12 = iPhone XS/XR、iOS 17/18)</td><td>ガラス系ミニゲームは常にレイトレーシングカーネルを使うため、A12 では <code>glassTraceSoftware</code> 経路になる。この経路を実機で検証した記録が見当たらない。同じ metallib に <code>&lt;metal_raytracing&gt;</code> を使う関数が同居しているとき、非対応 GPU で <code>makeDefaultLibrary()</code>/パイプライン生成がどう振る舞うかも未検証</td><td>未確認。最低 iOS を 26 にするとこの経路は配布対象から消える</td></tr>
+<tr><td>GPU メモリ</td><td>ガラスの RT テクスチャは長辺 ≤768px × RGBA32Float × 2 枚(≈19MB 以下)、加速構造体は破片数 ≤1600 面に制限。リング・ミニゲームのインスタンスバッファは各 3×8192 要素。ゲーム側で <code>recommendedMaxWorkingSetSize</code> 等の上限確認は無い</td><td>数値上は小さい。実測は iPhone 12 mini のみ</td></tr>
+<tr><td>持続負荷・発熱</td><td>フレーム時間と熱状態で品質段階を下げる仕組みはあるが、10 分連続実行の計測は未実施(<code>docs/release-setup-v4.md</code>)</td><td>クラッシュ要因かは不明</td></tr>
+</table>
+<p class="meta">Xcode が約 184GB のメモリを使った件は、Xcode/インデクサ/Simulator 側の異常であり、アプリの端末要件とは無関係です。本計画ではビルドを伴う作業を切り離しています。</p>
+
+<h2>5. 案の比較</h2>
+<table>
+<tr><th style="width:22%">案</th><th>設定</th><th>利点</th><th>欠点・制約</th></tr>
+<tr><td>A. 最小限(iPhone 専用化のみ)</td><td>ファミリー 1、iOS 17 のまま</td><td>影響が最小。TestFlight 済みビルドとの差が小さい</td><td>A12 の未検証経路が残る。iPad 互換モードは残る</td></tr>
+<tr><td><strong>B. 推奨: iPhone 専用 + iOS 26 以上 + アプリ内ガード</strong></td><td>ファミリー 1、iOS 26.0、<code>UIRequiredDeviceCapabilities = [arm64, metal]</code>、強制アンラップ除去、Metal 非対応時の案内文修正</td><td>対象が A13 以降で揃い、RT 対応が保証される。手元の iPhone 12 mini(iOS 26 を入れれば)で検証できる。「機能を実際に使っている」根拠に基づく要件だけ</td><td>iOS 18 以下の端末を切る(Apple の互換表では OS 更新で救済可能)。iPad 互換モードは残る</td></tr>
+<tr><td>C. 最も狭い: B + gaming-tier</td><td>B に <code>iphone-performance-gaming-tier</code> を追加</td><td>iPhone 15 Pro 相当以降(17 世代全モデルを含む)に限定でき、希望に最も近い</td><td>手元の iPhone 12 mini にインストールできず<strong>検証手段が無くなる</strong>。公開後に外す(緩める)ことはできるが、逆に後から付けることはできない [1]。iPad M1 以降には入る可能性(公式未確認)。TestFlight の既存テスターの端末によっては新ビルドが配布されない</td></tr>
+</table>
+<div class="box"><strong>推奨:</strong> 案 B を採用し、iPhone 15 Pro 相当以上の実機(例: iPhone 17)を検証用に用意できた時点で案 C へ進むかを判断する。案 C を先に入れると、現在唯一の実機で起動確認すらできません。</div>
+
+<h3>推奨する対応端末・最低 OS</h3>
+<ul>
+<li><strong>対応端末:</strong> iPhone 専用(iPad は対象外と表明。互換モードでの動作は保証しない旨をストア説明・サポート FAQ に記載)</li>
+<li><strong>最低 OS:</strong> iOS 26.0(結果として iPhone 11 / SE 第2世代以降 = A13 以降)</li>
+<li><strong>根拠:</strong> ガラス系ミニゲームは Metal レイトレーシング API を常時使用し、A13 以降で対応 [7][8]。A12 向けソフトウェア経路は未検証。iOS 26 は 2025 年公開で、現行 iOS 27 と対応機種が同一のため [3][4]、切り捨てる機種は「OS を更新していない端末」だけ</li>
+</ul>
+
+<h2>6. 制約と未確認事項</h2>
+<ul>
+<li>gaming-tier が iPad に及ぼす効果、対象機種の正確な一覧は Apple の一次資料に無く、フォーラム報告のみ [9][10]。Apple DTS は「対象端末を事前に確認する公式手段は無い」と回答 [10]</li>
+<li>Xcode が自動で書き込む <code>UIRequiredDeviceCapabilities</code>(通常 <code>arm64</code>)の現在値は、生成された Info.plist / IPA を開かないと確認できない(今回は未確認)</li>
+<li>A12(iPhone XS/XR)でのソフトウェア RT 経路と metallib 読み込みは未検証。iOS 26 最低化で対象外になるため、検証しない前提</li>
+<li>iPhone 17 Pro / Air のチップは Apple 仕様ページ未取得。iPhone 17 / 17e は A19 と確認 [5][6]</li>
+<li>TestFlight で既にアップロードした 1.0(5) と要件を変えたビルドの共存挙動(既存テスターへの配布可否)は Apple 資料で未確認。App Store 未公開なので「更新で要件を追加できない」制約 [1] は今回は当たらないと仮定</li>
+<li>GPU 家族 Apple10 = A19 系という対応は Metal 機能表 PDF の抽出結果で、読み取り精度に不安あり(判断には使っていない)[8]</li>
+</ul>
+
+<h2>7. 実行計画(承認後に着手)</h2>
+<h3>7-1. 変更対象ファイルと内容(案 B)</h3>
+<table>
+<tr><th style="width:30%">ファイル</th><th>変更</th></tr>
+<tr><td><code>project.yml</code></td><td><code>TARGETED_DEVICE_FAMILY: '1'</code>、<code>deploymentTarget.iOS: '26.0'</code>、<code>INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad</code> の削除、<code>info.properties</code> に <code>UIRequiredDeviceCapabilities: [arm64, metal]</code>(案 C なら <code>iphone-performance-gaming-tier</code> を追加)</td></tr>
+<tr><td><code>Tamor.xcodeproj/project.pbxproj</code></td><td><code>xcodegen generate</code> で再生成(CLI のみ。Xcode は起動しない)。Codex 専任ファイルのため作業分担を要調整</td></tr>
+<tr><td><code>Config/Info.plist</code></td><td>xcodegen が <code>UIRequiredDeviceCapabilities</code> を書き出すことを確認</td></tr>
+<tr><td><code>Sources/Rendering/MiniGameMetalView.swift</code></td><td>:107 のエラーを Metal 用の文言に変更、:121/:124/:126 の <code>!</code> を <code>guard … else { throw }</code> に</td></tr>
+<tr><td><code>Sources/Features/Glass/GlassFragmentEngine.swift</code></td><td>:40 の <code>makeFunction(name:)!</code> を guard 化</td></tr>
+<tr><td><code>Sources/Localizable.xcstrings</code></td><td>新しい案内文(日英)の追加。例:「この端末では宝石の描画に必要な Metal 機能を利用できません。」</td></tr>
+<tr><td>iOS 26 化に伴う整理(任意)</td><td><code>#available</code> 分岐や iOS 17 向け回避策があれば削除。今回の読み取り範囲では見当たらず</td></tr>
+<tr><td>文書</td><td><code>store-listing.md</code>・<code>app-review-notes.md</code>・<code>testflight-info.md</code> の「iPad 対応」「iOS 17」記述を更新。iPad 用スクリーンショットは不要になる</td></tr>
+</table>
+<h3>7-2. 実機検証(代表端末のみ)</h3>
+<ol>
+<li>iPhone 12 mini(A14)を iOS 26 に更新できることを確認し、更新後に 1.0 の新ビルドで起動・4 ミニゲーム・購入画面・設定を確認。iOS 26 に上げられない場合は案 B の最低 OS を再検討</li>
+<li>iPhone 17(または 15 Pro 相当以上)が入手できれば同じ手順。入手できない端末は「未検証」と記録し、確認済みにしない</li>
+<li>iPad(手元にあれば)で互換モードの起動確認。無ければ「iPad は未検証・非対応表明」とする</li>
+<li>ビルドは Codex/人間側の Mac で実施。メモリ対策として、Simulator を使わず実機のみ、インデックス再構築を避けるため DerivedData を消さない、並列ビルド数を制限する、といった運用は別途</li>
+</ol>
+<h3>7-3. 配布設定の確認</h3>
+<ol>
+<li>アップロード後、App Store Connect のビルド詳細で最低 OS と「Supported device」表示を確認(機能要件ごとの対象機種一覧は表示されない [10])</li>
+<li>TestFlight で iPhone 12 mini(案 B)/対象外端末にインストールできないこと(案 C)を実際に確認</li>
+<li>App Store 公開前に要件を決め切る。公開後は緩めることしかできない [1]</li>
+</ol>
+<h3>7-4. 戻し方</h3>
+<ul>
+<li><code>project.yml</code> の 3 項目を元に戻し <code>xcodegen generate</code>。コード変更(guard 化)は戻す必要なし</li>
+<li>App Store 公開前なら次ビルドで自由に戻せる。公開後は「緩める」方向のみ可能で、狭める戻しは不可 [1]</li>
+</ul>
+
+<h2>8. 参考(Apple 公式資料)</h2>
+<ol>
+<li><a href="https://developer.apple.com/documentation/bundleresources/information-property-list/uirequireddevicecapabilities">UIRequiredDeviceCapabilities</a> — 「App Store は必要機能を持たない端末へのインストールを防ぐ」「更新では要件の維持または緩和のみ」</li>
+<li><a href="https://developer.apple.com/support/required-device-capabilities/">Required Device Capabilities(機種別対応表)</a> — 機能ごとの対応機種一覧(ページ内のセレクタで表示。今回はテキスト抽出できず、機種別の可否は未確認)</li>
+<li><a href="https://support.apple.com/guide/iphone/iphe3fa5df43/26/ios/26">iOS 26 に対応する iPhone モデル</a> — iPhone 11 以降、SE(第2世代)以降、iPhone 17 / 17 Pro / 17 Pro Max / Air / 17e</li>
+<li><a href="https://support.apple.com/guide/iphone/iphe3fa5df43/27/ios/27">iOS 27 に対応する iPhone モデル</a> — 同上 + iPhone 18 Pro / Pro Max</li>
+<li><a href="https://support.apple.com/en-us/125089">iPhone 17 技術仕様</a> — A19、5 コア GPU</li>
+<li><a href="https://support.apple.com/en-us/126470">iPhone 17e 技術仕様</a> — A19、4 コア GPU</li>
+<li><a href="https://developer.apple.com/documentation/metal/mtlgpufamily/apple6">MTLGPUFamily.apple6</a>(A13)、<a href="https://developer.apple.com/documentation/metal/mtlgpufamily/apple9">apple9</a>(A17 / M3 / M4)、<a href="https://developer.apple.com/documentation/metal/mtldevice/supportsraytracing">MTLDevice.supportsRaytracing</a></li>
+<li><a href="https://developer.apple.com/metal/Metal-Feature-Set-Tables.pdf">Metal Feature Set Tables(PDF)</a> — レイトレーシング(コンピュート/レンダー)は Apple6 以降</li>
+<li><a href="https://developer.apple.com/forums/thread/737946">Developer Forums: iphone-performance-gaming-tier</a>(公式文書ではない。iPad への作用の報告)</li>
+<li><a href="https://developer.apple.com/forums/thread/773898">Developer Forums: gaming-tier と ipad-minimum-performance-m1 の併用</a>(Apple DTS「対象端末を事前確認する公式手段は無い」)</li>
+</ol>
+</main></body></html>
