@@ -5,3 +5,5 @@ xcuserdata/
 .DS_Store
 .build/
 QA/
+docs/release/shipaton/out/
+docs/release/shipaton/raw/

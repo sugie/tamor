@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tamor デモ動画 撮影手順書</title>
+<style>
+:root{--ink:#1f2933;--muted:#5b6771;--gold:#96713b;--paper:#f7f5ef;--line:#dedbd2;--teal:#236962;--warn:#f3ecdc}
+@media(prefers-color-scheme:dark){:root{--ink:#e8e4da;--muted:#a3adb5;--gold:#d2b071;--paper:#12181e;--line:#2c353d;--teal:#6fc1b8;--warn:#2a2416}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;line-height:1.85;font-size:16px}
+header{padding:48px 20px 36px;background:linear-gradient(130deg,#172632,#111d28);color:#fff;border-bottom:4px solid #bb9a62}
+header .in,main{max-width:860px;margin:0 auto}
+header small{letter-spacing:.15em;color:#debe86;font-weight:700}
+h1{font-size:clamp(26px,5vw,38px);line-height:1.4;margin:10px 0}
+header p{color:#ebdfcc;margin:0}
+main{padding:0 20px 60px}
+section{padding:34px 0;border-bottom:1px solid var(--line)}
+h2{font-size:22px;margin:0 0 14px}
+h3{font-size:17px;margin:22px 0 8px}
+.time{display:inline-block;background:var(--teal);color:#fff;border-radius:999px;padding:1px 12px;font-size:13px;font-weight:700;margin-left:8px;vertical-align:middle}
+.box{padding:14px 18px;border-radius:0 10px 10px 0;border-left:4px solid var(--teal);background:rgba(35,105,98,.10);margin:16px 0}
+.warn{border-left-color:#b38a3d;background:var(--warn)}
+ol,ul{padding-left:1.3em}
+li{margin:5px 0}
+table{border-collapse:collapse;width:100%;font-size:14px;margin:12px 0}
+th,td{border:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}
+th{background:rgba(150,113,59,.12)}
+.wrap{overflow-x:auto}
+code{font-family:ui-monospace,Menlo,monospace;background:rgba(127,127,127,.15);border-radius:4px;padding:1px 6px;font-size:.88em;overflow-wrap:anywhere}
+label.c{display:block;margin:6px 0}
+input[type=checkbox]{width:18px;height:18px;margin-right:8px;vertical-align:-3px}
+.muted{color:var(--muted);font-size:14px}
+</style>
+</head>
+<body>
+<header><div class="in"><small>TAMOR · SHIPATON DEMO VIDEO</small><h1>デモ動画 撮影手順書</h1><p>12 mini で 5 分プレイ → 残りは Claude が編集・字幕・書き出し</p></div></header>
+<main>
+
+<section>
+<h2>0. 結論</h2>
+<ul>
+<li><b>専用ビルドは不要。</b> App Store の公開版 1.0 を 12 mini にそのまま使います。TestFlight や開発ビルドは使いません(開発表示が映るのを避けるため)。</li>
+<li><b>役割分担</b>
+<table><tbody>
+<tr><th>あなた(約 15 分)</th><td>12 mini で画面収録しながら 5 分プレイ。収録ファイルと、書き出した保存データを Mac に送る。</td></tr>
+<tr><th>Claude</th><td>(a) あなたの収録を切って並べ、英語字幕・タイトル・エンドカードを入れて 2 分未満の mp4 にする。(b) 保存データを Mac のシミュレーターに読み込み、iPhone 17/18 Pro Max の<b>大きな画面で宝石のスポットライト場面</b>を撮る。</td></tr>
+</tbody></table></li>
+<li><b>「豪華な大きい絵」について。</b> 12 mini(A14)はレイトレーシング非対応で、画面も小さめです。大画面の映像は上の (b) で作ります。iPhone 18 Pro Max(10/18 到着予定)は締切に間に合わないので、今回は使いません。将来のアップデート動画に取っておきます。</li>
+</ul>
+<div class="box warn"><b>時間の目安:</b> 締切は日本時間 10/1 15:45。<b>9/29 中に撮影 → 9/30 午前に編集・アップロード → 9/30 日中に提出</b>を目標にします。</div>
+</section>
+
+<section>
+<h2>1. 撮影前の準備 <span class="time">約 5 分</span></h2>
+<label class="c"><input type="checkbox">12 mini の <b>充電を 80% 以上</b>にする(または充電しながら)。</label>
+<label class="c"><input type="checkbox">設定 → 集中モード → <b>おやすみモードをオン</b>(通知バナーが映らないように)。</label>
+<label class="c"><input type="checkbox"><b>アプリの言語を英語にする:</b> 設定 → 一般 → 言語と地域 でなく、設定アプリの一覧から <b>Tamor → 言語 → English</b>(出ない場合は iPhone の言語を英語に切り替え、撮影後に戻す)。</label>
+<label class="c"><input type="checkbox">Tamor をタスクキルして、<b>ホーム画面のほかのアプリが映らない</b>ようにする(撮影はアプリ内だけ)。</label>
+<label class="c"><input type="checkbox">コントロールセンターに<b>「画面収録」</b>を追加(設定 → コントロールセンター)。<b>マイクはオフ</b>(音なしで撮ります)。</label>
+<label class="c"><input type="checkbox">画面の自動ロックを<b>「なし」</b>にする(設定 → 画面表示と明るさ)。輝度は<b>最大</b>。</label>
+<label class="c"><input type="checkbox"><b>縦向きで固定</b>(縦向きロックをオン)。</label>
+<div class="box">画面右上の時計とバッテリーは映って構いません。Apple ID、氏名、メール、購入時のパスワード画面は<b>絶対に映さない</b>でください。</div>
+</section>
+
+<section>
+<h2>2. 撮る内容(ショットリスト)<span class="time">約 5 分</span></h2>
+<p>画面収録は<b>1 本を止めずに続けて</b>撮って構いません。私が切ります。各場面のあいだに 1〜2 秒の「間」を置いてください。動きはゆっくり、指は画面の端に触れないように。</p>
+<div class="wrap"><table>
+<tr><th>#</th><th>場面</th><th>やること</th><th>長さ</th></tr>
+<tr><td>1</td><td>リング</td><td>起動直後のリング画面を 3 秒見せる。端末を軽く傾けてリングが動くのを見せる。</td><td>5 秒</td></tr>
+<tr><td>2</td><td>Glass Break(ダイヤモンド)</td><td>「Choose Gem &amp; Depth」→ Diamond の Depth 1。赤い点を押してガラスを割り、<b>成功して宝石を獲得</b>するまで。</td><td>10〜15 秒</td></tr>
+<tr><td>3</td><td>Glass Trace(ルビー)</td><td>緑の点を指で追う。<b>成功</b>するまで。失敗したら、やり直して成功を撮る。</td><td>10〜15 秒</td></tr>
+<tr><td>4</td><td>Kurukuru World(サファイア)</td><td>同じ向きに回る宝石のペアを押していく。<b>クリア</b>まで。</td><td>10〜15 秒</td></tr>
+<tr><td>5</td><td>Crusher Room(黒曜石)</td><td>10 秒でガラスを割る。<b>光る弱点を狙う</b>。結果(評価)まで映す。</td><td>15 秒</td></tr>
+<tr><td>6</td><td>宝石のスポットライト</td><td>リングに戻り、獲得した宝石をタップ → 中央へ移動 → <b>指でゆっくり回転</b> → もう一度タップして戻す。</td><td>10 秒</td></tr>
+<tr><td>7</td><td>Gem Box</td><td>「Gem Box」を開いて、集めた宝石を見せて閉じる。</td><td>5 秒</td></tr>
+<tr><td>8</td><td>深度の一覧</td><td>「Choose Gem &amp; Depth」で Depth 1〜3 が無料、Depth 4〜6 が鍵つきなのを見せる。</td><td>5 秒</td></tr>
+<tr><td>9</td><td>購入画面</td><td>「Unlock World 1 Depths 4–6」を開く。説明文(宝石は付かない、スキル条件は残る)を 3 秒見せて、<b>購入ボタンは押さない</b>。閉じる。</td><td>5 秒</td></tr>
+<tr><td>10</td><td>購入の復元</td><td>設定(右上のスライダー)→ Purchases →「Restore Purchases」→ 結果メッセージを見せる。<b>Apple ID の入力画面が出たらキャンセル</b>して、その部分は撮らない。</td><td>8 秒</td></tr>
+</table></div>
+<div class="box"><b>ポイント:</b> 失敗の場面は不要です(成功だけ)。宝石が獲得できるまでは、遊びながら何度撮り直しても構いません。全部で <b>1 分 30 秒</b>ほどの素材が取れれば十分です。</div>
+<div class="box warn"><b>撮らないもの:</b> 購入の支払いシート、Apple ID / パスワード、通知、ホーム画面、設定アプリの画面(言語切替)。World 2 の予告ページも映さないでください(1.0 の購入対象ではないため)。</div>
+</section>
+
+<section>
+<h2>3. 保存データを書き出す(大画面用) <span class="time">約 2 分</span></h2>
+<p>撮影が終わったら、<b>プレイして貯めた宝石</b>をシミュレーターに移して、大画面で撮り直せるようにします。</p>
+<ol>
+<li>Tamor の設定(右上のスライダー)→ 「Export save data(保存データを書き出す)」。</li>
+<li>共有シートで<b>「Mac に AirDrop」</b>。または「ファイルに保存」→ iCloud Drive。</li>
+<li>Mac 側の受け取り先: <code>~/Downloads/</code> でよい。ファイル名はそのままで構いません。</li>
+</ol>
+<p class="muted">この保存データには、獲得した宝石と記録だけが入っています。Apple ID や購入情報は入りません。</p>
+</section>
+
+<section>
+<h2>4. Mac に送る <span class="time">約 2 分</span></h2>
+<ol>
+<li>画面収録は、写真アプリ → 共有 → AirDrop で Mac に送る(または iCloud 写真の「ファイル」経由)。</li>
+<li>Mac 側で、次のフォルダに移す:<br><code>/Users/tsugie/opt/tamor/docs/release/shipaton/raw/</code><br>収録は <code>raw/playthrough.mov</code>、保存データは <code>raw/tamor-save.json</code>(名前は違っていて構いません)。</li>
+<li>Claude に「撮った」と伝える。</li>
+</ol>
+</section>
+
+<section>
+<h2>5. そのあと Claude がすること</h2>
+<ol>
+<li>あなたの収録から成功場面を切り出し、<a href="demo-video-script.en.md">台本</a>の順に並べる。</li>
+<li>保存データをシミュレーター(iPhone 17/18 Pro Max)に読み込み、<b>宝石のスポットライトや大きな宝石の映像</b>を撮って差し込む。</li>
+<li>英語字幕・タイトル・エンドカード(米国 App Store の URL)を入れて、<b>1 分 45 秒以内</b>の mp4 に書き出す。</li>
+<li>あなたが内容を確認したら、YouTube に<b>限定公開</b>でアップロード(アップロードはあなたの YouTube アカウントで行います)。</li>
+<li>動画 URL を Devpost の「Video demo link」に入れる → 規約に同意して Submit(この 2 つはあなたの操作)。</li>
+</ol>
+<div class="box"><b>動画に入れない・入れる</b><br>入れない: 価格、Apple ID、購入シート、World 2、Neural Engine の話。<br>入れる: リング、4 つのゲーム、宝石の演出、無料範囲、購入は「深度 4〜6 のアクセスのみ」、購入の復元。</div>
+</section>
+
+<section>
+<h2>6. うまくいかないとき</h2>
+<table>
+<tr><th>症状</th><th>対処</th></tr>
+<tr><td>アプリを英語にできない</td><td>iPhone の言語を英語に切り替えて撮影し、撮影後に戻す(撮影中の 5 分だけ)。</td></tr>
+<tr><td>ゲームの成功が出ない</td><td>Depth 1 は最も易しい設定です。成功するまで撮り直してください。必要なら私が字幕で「成功場面」を補います。</td></tr>
+<tr><td>画面収録に録画ボタンの赤い帯が映る</td><td>問題ありません。私が上部を切り取ります。</td></tr>
+<tr><td>AirDrop が使えない</td><td>写真アプリから iCloud 経由で Mac の写真アプリに同期 → 書き出し。</td></tr>
+<tr><td>時間が足りない</td><td>#2〜#5 の 4 つのゲームだけを 1 回ずつ撮れば、動画は組み立てられます。</td></tr>
+</table>
+<p class="muted">締切: 日本時間 2026-10-01 15:45(2026-09-30 23:45 PDT)。提出後も締切まで編集できます。</p>
+</section>
+
+</main>
+</body>
+</html>
