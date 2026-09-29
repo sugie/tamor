@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Generate the Shipaton submission TODO workbook for Tamor 1.0."""
+from pathlib import Path
+
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
-OUTPUT = "/Users/tsugie/opt/tamor/docs/release/shipaton-submission-todo.xlsx"
+OUTPUT = str(Path(__file__).resolve().parent.parent / "docs/release/shipaton-submission-todo.xlsx")
 
 HEADER_FILL = PatternFill("solid", fgColor="1F3864")
 HEADER_FONT = Font(bold=True, color="FFFFFF", size=11)
