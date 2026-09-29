@@ -1,14 +1,14 @@
 # Judge access instructions (English) — DRAFT
 
-> Paste into the Devpost "promo code / paid feature access" field. Replace codes and the redeem URL after issuing them in App Store Connect (Tamor → In-App Purchases → World 1 Full Depth → Offer Codes). **Do not submit any code you used for testing.**
+> Paste into the Devpost "promo code / paid feature access" field. Offer "Shipaton Judges" (free, all regions) with custom code `SHIPATON2026` was created in App Store Connect on 2026-09-29 (limit 500, expires 2026-12-31). It may take up to 1 hour to become redeemable. Custom codes are reusable, so a test redemption does not consume the judges' access, only one of the 500 uses.
 
 Tamor is free to download. The paid feature is a one-time non-consumable in-app purchase, **World 1 Full Depth**, which unlocks Depths 4–6. You can also view the paywall and price without paying.
 
 ## Redeem an offer code (free for judges)
 1. Install Tamor from the App Store: [TODO: US App Store URL]
 2. Open this link on the iPhone (or enter the code at App Store → profile picture → Redeem Gift Card or Code):
-   [TODO: offer-code redemption URL, e.g. https://apps.apple.com/redeem?ctx=offercodes&id=6814390528&code=XXXX]
-   Code: `[TODO: CODE]` — valid until [TODO: 2026-10-31].
+   https://apps.apple.com/redeem?ctx=offercodes&id=6814390528&code=SHIPATON2026
+   Code: `SHIPATON2026` — valid until 2026-12-31 (free offer, up to 500 redemptions).
 3. Return to Tamor. The entitlement `world1_full_depth` is granted via RevenueCat and Depths 4–6 become available. If it does not appear immediately, open Settings (slider icon, top right) → **Restore Purchases**.
 
 ## Where to look
