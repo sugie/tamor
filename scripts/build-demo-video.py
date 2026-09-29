@@ -27,6 +27,17 @@ CROP_TOP = 112  # px of the 2436-tall source: status bar + recording pill
 
 STORE_URL = "apps.apple.com/us/app/tamor-jewel-ring/id6814390528"
 
+# Purchase clip (sandbox test purchase). blur = list of (y0, y1, t0, t1) regions in source
+# pixels, t relative to segment start (t1=None means whole segment): hides the Apple Account
+# line on Apple's purchase sheet.
+PURCHASE_SEGMENTS = [
+    ("p_offer", 9.6, 15.8, 1, "Unlock Depths 4-6", "One purchase through Apple. It never sells gems.", []),
+    ("p_sheet", 15.8, 20.5, 1, "Apple's purchase sheet", "Sandbox test purchase: no charge.",
+     [(2040, 2140, 0, None), (1900, 2436, 0, 1.0), (1900, 2436, 4.3, 4.7)]),
+    ("p_done", 20.5, 29.5, 1, "Purchase complete", "RevenueCat grants the world1_full_depth entitlement.", []),
+    ("p_depths", 31.0, 36.1, 1, "Depth 4 is open", "Skill still decides: clear each depth to open the next.", []),
+]
+
 # (label, source start, source end, speed, caption, sub-caption)
 SEGMENTS = [
     ("ring", 4.5, 9.0, 1, "A ring of gems\nyou earn with skill.", "Not luck. Not stamina timers."),
@@ -35,9 +46,7 @@ SEGMENTS = [
     ("trace", 61.0, 79.0, 1, "Ruby - Glass Trace", "Follow the green dot. Three cracks and it's over."),
     ("crush", 86.0, 100.0, 1, "Obsidian - Crusher Room", "10 seconds. Hit the weak point for a higher grade."),
     ("kuru", 106.0, 149.0, 3, "Sapphire - Kurukuru World", "Find pairs that spin the same way. (3x speed)"),
-    ("box", 159.0, 166.0, 1, "Your Gem Box", "Every gem you earn stays."),
     ("depths", 185.0, 187.2, 1, "Depths 1-3 are free", "Depths 4-6 need the one-time World 1 unlock."),
-    ("pay", 187.2, 190.4, 1, "One purchase, no gems sold", "It unlocks access to Depths 4-6. Skill still decides the carats."),
 ]
 
 
@@ -89,9 +98,21 @@ def encode_still(png, out, secs):
          "-vf", f"scale={W}:{H},format=yuv420p", "-c:v", "libx264", "-crf", "18", "-an", str(out)])
 
 
-def encode_phone(src, out, start, end, speed, cap_png, phone_w=None):
+def blur_chain(blur):
+    """Filter chain fragment that blurs the given regions of [0:v] -> [src]."""
+    chain, prev = "", "0:v"
+    for i, (y0, y1, t0, t1) in enumerate(blur):
+        en = f"gte(t,{t0})" if t1 is None else f"between(t,{t0},{t1})"
+        chain += (f"[{prev}]split[m{i}][b{i}];[b{i}]crop=iw:{y1 - y0}:0:{y0},gblur=sigma=40[bl{i}];"
+                  f"[m{i}][bl{i}]overlay=0:{y0}:enable='{en}'[v{i}];")
+        prev = f"v{i}"
+    return chain, prev
+
+
+def encode_phone(src, out, start, end, speed, cap_png, blur=()):
     dur = (end - start)
-    vf = (f"[0:v]crop=iw:ih-{CROP_TOP}:0:{CROP_TOP},setpts=(PTS-STARTPTS)/{speed},"
+    pre, last = blur_chain(blur)
+    vf = (pre + f"[{last}]crop=iw:ih-{CROP_TOP}:0:{CROP_TOP},setpts=(PTS-STARTPTS)/{speed},"
           f"scale=-2:{PHONE_H},fps=30[ph];"
           f"color=c=#{BG[0]:02x}{BG[1]:02x}{BG[2]:02x}:s={W}x{H}:r=30[bg];"
           f"[bg][ph]overlay=x=1180:y=40:shortest=1[a];"
@@ -129,16 +150,12 @@ def main():
         parts.append(o)
 
     if a.purchase:
-        c = tmp / "cap_purchase.png"
-        caption_png(c, "Purchase and restore", "Powered by RevenueCat. Restore Purchases brings the unlock back.")
-        o = tmp / "90_purchase.mp4"
-        run(["ffmpeg", "-y", "-i", a.purchase, "-i", str(c),
-             "-filter_complex",
-             f"[0:v]setpts=PTS-STARTPTS,scale=-2:{PHONE_H},fps=30[ph];"
-             f"color=c=#{BG[0]:02x}{BG[1]:02x}{BG[2]:02x}:s={W}x{H}:r=30[bg];"
-             f"[bg][ph]overlay=x=1180:y=40:shortest=1[a];[a][1:v]overlay=0:0[v]",
-             "-map", "[v]", "-c:v", "libx264", "-crf", "19", "-pix_fmt", "yuv420p", "-an", str(o)])
-        parts.append(o)
+        for j, (label, s0, e0, sp, title, sub, blur) in enumerate(PURCHASE_SEGMENTS):
+            c = tmp / f"cap_{label}.png"
+            caption_png(c, title, sub)
+            o = tmp / f"9{j}_{label}.mp4"
+            encode_phone(a.purchase, o, s0, e0, sp, c, blur)
+            parts.append(o)
 
     p = tmp / "end.png"
     title_card(p, [("TAMOR", 130, INK, True), ("Available now on the App Store", 48, GOLD, False)],
