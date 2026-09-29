@@ -2,7 +2,7 @@
 """Assemble the Shipaton demo video from a raw iPhone screen recording.
 
 Usage:
-  python3 scripts/build-demo-video.py [--purchase CLIP.mov] [--out out.mp4]
+  python3 scripts/build-demo-video.py [--purchase CLIP.mov] [--restore CLIP.mov] [--out out.mp4]
 
 The raw recording is expected at ~/Downloads/ScreenRecording_09-29-2026 14-06-47_1.MP4
 (override with --raw). An optional --purchase clip (purchase / restore footage) is
@@ -36,6 +36,11 @@ PURCHASE_SEGMENTS = [
      [(2040, 2140, 0, None), (1900, 2436, 0, 1.0), (1900, 2436, 4.3, 4.7)]),
     ("p_done", 20.5, 29.5, 1, "Purchase complete", "RevenueCat grants the world1_full_depth entitlement.", []),
     ("p_depths", 31.0, 36.1, 1, "Depth 4 is open", "Skill still decides: clear each depth to open the next.", []),
+]
+
+# Restore clip (fresh reinstall, then Restore Purchases).
+RESTORE_SEGMENTS = [
+    ("r_restore", 9.5, 15.0, 1, "Reinstalled?\nRestore Purchases", "The unlock comes back. Gems stay on this device.", []),
 ]
 
 # (label, source start, source end, speed, caption, sub-caption)
@@ -129,6 +134,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--raw", default=os.path.expanduser("~/Downloads/ScreenRecording_09-29-2026 14-06-47_1.MP4"))
     ap.add_argument("--purchase", help="optional purchase/restore clip to insert before the end card")
+    ap.add_argument("--restore", help="optional restore-purchases clip, inserted after the purchase footage")
     ap.add_argument("--out", default=str(Path(__file__).resolve().parent.parent / "docs/release/shipaton/out/tamor-demo.mp4"))
     a = ap.parse_args()
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
@@ -155,6 +161,14 @@ def main():
             caption_png(c, title, sub)
             o = tmp / f"9{j}_{label}.mp4"
             encode_phone(a.purchase, o, s0, e0, sp, c, blur)
+            parts.append(o)
+
+    if a.restore:
+        for j, (label, s0, e0, sp, title, sub, blur) in enumerate(RESTORE_SEGMENTS):
+            c = tmp / f"cap_{label}.png"
+            caption_png(c, title, sub)
+            o = tmp / f"95_{label}.mp4"
+            encode_phone(a.restore, o, s0, e0, sp, c, blur)
             parts.append(o)
 
     p = tmp / "end.png"
